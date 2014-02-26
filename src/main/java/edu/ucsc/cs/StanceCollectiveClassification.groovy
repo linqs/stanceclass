@@ -1,8 +1,8 @@
 package edu.ucsc.cs
 
 import edu.umd.cs.psl.application.inference.MPEInference
-
-import edu.umd.cs.psl.application.learning.weight.maxlikelihood.LazyMaxLikelihoodMPE
+import edu.umd.cs.psl.application.inference.LazyMPEInference;
+import edu.umd.cs.psl.application.learning.weight.maxlikelihood.LazyMaxLikelihoodMPE;
 import edu.umd.cs.psl.application.learning.weight.maxlikelihood.MaxLikelihoodMPE
 import edu.umd.cs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood
 import edu.umd.cs.psl.application.learning.weight.maxmargin.MaxMargin
@@ -78,6 +78,7 @@ model.add predicate: "disagreesAuth" , types:[ArgumentType.UniqueID, ArgumentTyp
 model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 model.add predicate: "topic" , types:[ArgumentType.String]
+model.add predicate: "author" , types:[ArgumentType.UniqueID]
 
 /*
  * Rules for consistency of any author's stance - these won't be necessary as 
@@ -166,6 +167,9 @@ InserterUtils.loadDelimitedData(inserter, dir+"author_posts.csv", ",");
 inserter = data.getInserter(topic, fullobserved)
 InserterUtils.loadDelimitedData(inserter, dir+"topic.txt");
 
+inserter = data.getInserter(author, fullobserved)
+InserterUtils.loadDelimitedData(inserter, dir+"authors.csv", ",")
+
 /*
  * Ground truth for training data for weight learning
  */
@@ -204,42 +208,57 @@ InserterUtils.loadDelimitedData(inserter, testdir+"topic.txt");
 Database observed = data.getDatabase(fullobserved, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set);
 Database truedata = data.getDatabase(groundtruth, [isProPost, isProAuth] as Set);
 
-int rv = 0, ob = 0
-ResultList allGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
-for (int i = 0; i < allGroundings.size(); i++) {
-	GroundTerm [] grounding = allGroundings.get(i)
-	GroundAtom atom = observed.getAtom(hasLabelPro, grounding)
-	if (atom instanceof RandomVariableAtom) {
-		rv++
-		observed.commit((RandomVariableAtom) atom);
-	} else
-		ob++
-}
+//int rv = 0, ob = 0
+//ResultList allGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
+//for (int i = 0; i < allGroundings.size(); i++) {
+//	GroundTerm [] grounding = allGroundings.get(i)
+//	GroundAtom atom = observed.getAtom(hasLabelPro, grounding)
+//	if (atom instanceof RandomVariableAtom) {
+//		rv++
+//		observed.commit((RandomVariableAtom) atom);
+//	} else
+//		ob++
+//}
+//
+//int rv1 = 0, ob1 = 0
+//ResultList allGroundings1 = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
+//for (int i = 0; i < allGroundings1.size(); i++) {
+//	GroundTerm [] grounding = allGroundings1.get(i)
+//	GroundAtom atom = observed.getAtom(isProPost, grounding)
+//	if (atom instanceof RandomVariableAtom) {
+//		rv1++
+//		observed.commit((RandomVariableAtom) atom);
+//	} else
+//		ob1++
+//}
 
-int rv1 = 0, ob1 = 0
-ResultList allGroundings1 = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
-for (int i = 0; i < allGroundings1.size(); i++) {
-	GroundTerm [] grounding = allGroundings1.get(i)
-	GroundAtom atom = truedata.getAtom(isProPost, grounding)
-	if (atom instanceof RandomVariableAtom) {
-		rv1++
-		truedata.commit((RandomVariableAtom) atom);
-	} else
-		ob1++
-}
+//ResultList authorGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(author))
+//ResultList topicGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(topic))
+//
+//GroundTerm [] aGroundings = new GroundTerm[authorGroundings.size()];
+//GroundTerm [] tGroundings = new GroundTerm[topicGroundings.size()];
+//
+//for(int i = 0; i < authorGroundings.size(); i++){
+//	aGroundings = authorGroundings.get(i)
+//}
+//
+//for(int i = 0; i < topicGroundings.size(); i++){
+//	tGroundings = topicGroundings.get(i)
+//}
+//
+//for (GroundTerm author : aGroundings) {
+//	for (GroundTerm topic : tGroundings) {
+//		GroundAtom atom = truedata.getAtom(IsProAuth, author, topic)
+//		if (atom instanceof RandomVariableAtom) {
+//			observed.commit((RandomVariableAtom) atom);
+//		}
+//	}
+//}
 
-/*
-int rv2 = 0, ob2 = 0
-ResultList allGroundings2 = truedata.executeQuery(Queries.getQueryForAllAtoms(isProAuth))
-for (int i = 0; i < allGroundings2.size(); i++) {
-	GroundTerm [] grounding = allGroundings2.get(i)
-	GroundAtom atom = truedata.getAtom(isProAuth, grounding)
-	println atom;
-}
-*/
-
-MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, observed, truedata, cb);
+LazyMaxLikelihoodMPE weightLearning = new LazyMaxLikelihoodMPE(model, observed, truedata, cb);
+println "about to start weight learning"
 weightLearning.learn();
+println " finished weight learning "
 weightLearning.close();
 
 println model;
