@@ -6,7 +6,6 @@ import edu.umd.cs.psl.application.learning.weight.maxlikelihood.LazyMaxLikelihoo
 import edu.umd.cs.psl.application.learning.weight.maxlikelihood.MaxLikelihoodMPE
 import edu.umd.cs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood
 import edu.umd.cs.psl.application.learning.weight.maxmargin.MaxMargin
-import edu.umd.cs.psl.application.learning.weight.maxmargin.MaxMargin.LossBalancingType
 import edu.umd.cs.psl.application.learning.weight.maxmargin.MaxMargin.NormScalingType
 import edu.umd.cs.psl.application.learning.weight.random.FirstOrderMetropolisRandOM
 import edu.umd.cs.psl.application.learning.weight.random.HardEMRandOM
@@ -95,8 +94,12 @@ model.add predicate: "author" , types:[ArgumentType.UniqueID]
  * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
  */
 
+
+
 model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 5
 model.add rule : (~(isProPost(P, T)) & writesPost(A, P)) >> ~(isProAuth(A, T)), weight : 5
+
+
 
 //model.add rule : (agreesPost(P1, P2) & (P1^P2) & writesPost(A1, P1) & writesPost(A2, P2)) >> agreesAuth(A1, A2), weight : 5
 //model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & writesPost(A1, P1) & writesPost(A2, P2)) >> ~(agreesAuth(A1, A2)), weight : 5
@@ -112,10 +115,12 @@ model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & isProPost(P1, T)) >> ~(isPro
 model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(isProPost(P1, T))) >> isProPost(P2, T), weight : 5
 */
 
+/*
 model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 5
 model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 5
 model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 5
 model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 5
+*/
 
 /*
  * Rules for propagating disagreement/agreement through the network
@@ -156,7 +161,7 @@ inserter = data.getInserter(disagreesAuth, fullobserved)
 InserterUtils.loadDelimitedData(inserter, dir+"authordisagreement.csv", ",");
 
 inserter = data.getInserter(hasLabelPro, fullobserved)
-InserterUtils.loadDelimitedData(inserter, dir+"hasLabelPro.txt");
+InserterUtils.loadDelimitedData(inserter, dir+"labels.csv", ",");
 
 inserter = data.getInserter(hasTopic, fullobserved)
 InserterUtils.loadDelimitedData(inserter, dir+"post_topics.csv", ",");
@@ -187,26 +192,36 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
 def testdir = 'data'+java.io.File.separator+'test'+java.io.File.separator;
 
 
-inserter = data.getInserter(agreesAuth, test)
-InserterUtils.loadDelimitedData(inserter, testdir+"agreesAuth.txt");
+//inserter = data.getInserter(agreesAuth, test)
+//InserterUtils.loadDelimitedData(inserter, testdir+"agreesAuth.txt");
+//
+//inserter = data.getInserter(disagreesAuth, test)
+//InserterUtils.loadDelimitedData(inserter, testdir+"disagreesAuth.txt");
+//
+//inserter = data.getInserter(hasLabelPro, test)
+//InserterUtils.loadDelimitedData(inserter, testdir+"hasLabelPro.txt");
+//
+//inserter = data.getInserter(hasTopic, test)
+//InserterUtils.loadDelimitedData(inserter, testdir+"hasTopic.txt");
+//
+//inserter = data.getInserter(writesPost, test)
+//InserterUtils.loadDelimitedData(inserter, testdir+"writesPost.txt");
+//
+//inserter = data.getInserter(topic, test)
+//InserterUtils.loadDelimitedData(inserter, testdir+"topic.txt");
 
-inserter = data.getInserter(disagreesAuth, test)
-InserterUtils.loadDelimitedData(inserter, testdir+"disagreesAuth.txt");
-
-inserter = data.getInserter(hasLabelPro, test)
-InserterUtils.loadDelimitedData(inserter, testdir+"hasLabelPro.txt");
-
-inserter = data.getInserter(hasTopic, test)
-InserterUtils.loadDelimitedData(inserter, testdir+"hasTopic.txt");
-
-inserter = data.getInserter(writesPost, test)
-InserterUtils.loadDelimitedData(inserter, testdir+"writesPost.txt");
-
-inserter = data.getInserter(topic, test)
-InserterUtils.loadDelimitedData(inserter, testdir+"topic.txt");
-
-Database observed = data.getDatabase(fullobserved, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set);
+Database observed = data.getDatabase(fullobserved, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic, author] as Set);
 Database truedata = data.getDatabase(groundtruth, [isProPost, isProAuth] as Set);
+
+
+/* Populate isProPost in observed DB. */
+DatabasePopulator dbPop = new DatabasePopulator(observed);
+dbPop.populateFromDB(truedata, isProPost);
+
+
+/* Populate isProAuth in observed DB. */
+DatabasePopulator populator = new DatabasePopulator(observed);
+populator.populateFromDB(truedata, isProAuth);
 
 //int rv = 0, ob = 0
 //ResultList allGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
@@ -255,7 +270,7 @@ Database truedata = data.getDatabase(groundtruth, [isProPost, isProAuth] as Set)
 //	}
 //}
 
-LazyMaxLikelihoodMPE weightLearning = new LazyMaxLikelihoodMPE(model, observed, truedata, cb);
+MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, observed, truedata, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "
