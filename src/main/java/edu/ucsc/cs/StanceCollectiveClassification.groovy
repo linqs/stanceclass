@@ -1,5 +1,7 @@
 package edu.ucsc.cs
 
+import java.util.Set;
+
 import edu.umd.cs.psl.application.inference.MPEInference
 import edu.umd.cs.psl.application.inference.LazyMPEInference;
 import edu.umd.cs.psl.application.learning.weight.maxlikelihood.LazyMaxLikelihoodMPE;
@@ -78,6 +80,7 @@ model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.
 
 model.add predicate: "topic" , types:[ArgumentType.String]
 model.add predicate: "author" , types:[ArgumentType.UniqueID]
+//model.add predicate: "authorTopic" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 /*
  * Rules for consistency of any author's stance - these won't be necessary as 
@@ -115,12 +118,12 @@ model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & isProPost(P1, T)) >> ~(isPro
 model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(isProPost(P1, T))) >> isProPost(P2, T), weight : 5
 */
 
-/*
+
 model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 5
 model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 5
 model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 5
 model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 5
-*/
+
 
 /*
  * Rules for propagating disagreement/agreement through the network
@@ -174,6 +177,9 @@ InserterUtils.loadDelimitedData(inserter, dir+"topic.txt");
 
 inserter = data.getInserter(author, fullobserved)
 InserterUtils.loadDelimitedData(inserter, dir+"authors.csv", ",")
+
+//inserter = data.getInserter(authorTopic, fullobserved)
+//InserterUtils.loadDelimitedData(inserter, dir+"authortopicgroundings.csv", ",")
 
 /*
  * Ground truth for training data for weight learning
