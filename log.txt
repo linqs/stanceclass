@@ -1,0 +1,58 @@
+0    [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.dbPath. Returning default of /var/folders/kC/kCIdTCoXHf0f2IDAJ6CnBE+++TI/-Tmp-//stance-classification.
+877  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.valuecolumn. Returning default of truth.
+878  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.confidencecolumn. Returning default of confidence.
+878  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.partitioncolumn. Returning default of partition.
+897  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - Found value true for option stance-classification.rdbmsdatastore.usestringids.
+934  [main] DEBUG edu.umd.cs.psl.database.rdbms.RDBMSDataStore  - Registered 0 pre-existing predicates from RDBMS.
+11153 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - Found value .0001 for option stance-classification.votedperceptron.stepsize.
+11153 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - Found value 10 for option stance-classification.votedperceptron.numsteps.
+11153 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.l2regularization. Returning default of 0.0.
+11154 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.l1regularization. Returning default of 0.0.
+11154 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.augmentloss. Returning default of false.
+11154 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.schedule. Returning default of true.
+11154 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.scalegradient. Returning default of false.
+11154 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.averagesteps. Returning default of true.
+13990 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.weightlearning.reasoner. Returning default of edu.umd.cs.psl.reasoner.admm.ADMMReasonerFactory@caa559d.
+14011 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.maxiterations. Returning default of 25000.
+14011 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.stepsize. Returning default of 1.0.
+14012 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.epsilonabs. Returning default of 1.0E-5.
+14012 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.epsilonrel. Returning default of 0.0010.
+14012 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.stopcheck. Returning default of 1.
+14014 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.numthreads. Returning default of 2.
+16308 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 32605 instances of rule {5.0} ( ISPROPOST(P, T) & WRITESPOST(A, P) ) >> ISPROAUTH(A, T) {squared}
+17211 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 32605 instances of rule {5.0} ( ~( ISPROPOST(P, T) ) & WRITESPOST(A, P) ) >> ~( ISPROAUTH(A, T) ) {squared}
+17251 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 325 instances of rule {5.0} ( ( AGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & ISPROAUTH(A1, T) ) >> ISPROAUTH(A2, T) {squared}
+17258 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 325 instances of rule {5.0} ( ( AGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & ~( ISPROAUTH(A1, T) ) ) >> ~( ISPROAUTH(A2, T) ) {squared}
+17861 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 6930 instances of rule {5.0} ( ( DISAGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & ISPROAUTH(A1, T) ) >> ~( ISPROAUTH(A2, T) ) {squared}
+0    [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.dbPath. Returning default of /var/folders/kC/kCIdTCoXHf0f2IDAJ6CnBE+++TI/-Tmp-//stance-classification.
+880  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.valuecolumn. Returning default of truth.
+880  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.confidencecolumn. Returning default of confidence.
+880  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.partitioncolumn. Returning default of partition.
+891  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - Found value true for option stance-classification.rdbmsdatastore.usestringids.
+927  [main] DEBUG edu.umd.cs.psl.database.rdbms.RDBMSDataStore  - Registered 0 pre-existing predicates from RDBMS.
+10636 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - Found value .0001 for option stance-classification.votedperceptron.stepsize.
+10636 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - Found value 10 for option stance-classification.votedperceptron.numsteps.
+10637 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.l2regularization. Returning default of 0.0.
+10637 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.l1regularization. Returning default of 0.0.
+10637 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.augmentloss. Returning default of false.
+10637 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.schedule. Returning default of true.
+10637 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.scalegradient. Returning default of false.
+10637 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.votedperceptron.averagesteps. Returning default of true.
+14936 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.weightlearning.reasoner. Returning default of edu.umd.cs.psl.reasoner.admm.ADMMReasonerFactory@40d38976.
+14943 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.maxiterations. Returning default of 25000.
+14943 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.stepsize. Returning default of 1.0.
+14944 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.epsilonabs. Returning default of 1.0E-5.
+14945 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.epsilonrel. Returning default of 0.0010.
+14945 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.stopcheck. Returning default of 1.
+14946 [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.admmreasoner.numthreads. Returning default of 2.
+17070 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 32605 instances of rule {5.0} ( ISPROPOST(P, T) & WRITESPOST(A, P) ) >> ISPROAUTH(A, T) {squared}
+17842 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 32605 instances of rule {5.0} ( ~( ISPROPOST(P, T) ) & WRITESPOST(A, P) ) >> ~( ISPROAUTH(A, T) ) {squared}
+17852 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 325 instances of rule {5.0} ( ( AGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & ISPROAUTH(A1, T) ) >> ISPROAUTH(A2, T) {squared}
+17957 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 325 instances of rule {5.0} ( ( AGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & ~( ISPROAUTH(A1, T) ) ) >> ~( ISPROAUTH(A2, T) ) {squared}
+18381 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 6930 instances of rule {5.0} ( ( DISAGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & ISPROAUTH(A1, T) ) >> ~( ISPROAUTH(A2, T) ) {squared}
+18592 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 6930 instances of rule {5.0} ( ( ( DISAGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & TOPIC(T) ) & ~( ISPROAUTH(A1, T) ) ) >> ISPROAUTH(A2, T) {squared}
+19171 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 3584 instances of rule {0.01} HASLABELPRO(P, T) >> ISPROPOST(P, T) {squared}
+23773 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 29021 instances of rule {0.01} ~( HASLABELPRO(P, T) ) >> ~( ISPROPOST(P, T) ) {squared}
+27786 [main] DEBUG edu.umd.cs.psl.application.learning.weight.maxlikelihood.VotedPerceptron  - Starting iter 1
+27788 [main] DEBUG edu.umd.cs.psl.reasoner.admm.ADMMReasoner  - Initializing optimization.
+27793 [main] DEBUG edu.umd.cs.psl.reasoner.admm.ADMMReasoner  - Initializing objective terms for 112325 ground kernels

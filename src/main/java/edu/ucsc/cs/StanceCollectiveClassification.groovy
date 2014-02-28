@@ -150,32 +150,35 @@ model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 0.01
  * Inserting data into the data store
  */
 
-Partition fullobserved = new Partition(0)
-Partition groundtruth = new Partition(1)
-Partition test = new Partition(2)
+Partition observed_tr = new Partition(0)
+Partition predict_tr = new Partition(1)
+Partition truth_tr = new Partition(2)
+Partition observed_te = new Partition(3)
+Partition predict_te = new Partition(4)
+Partition truth_te = new Partition(5)
 
 def dir = 'data'+java.io.File.separator+'train'+java.io.File.separator;
 
 
-inserter = data.getInserter(agreesAuth, fullobserved)
+inserter = data.getInserter(agreesAuth, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"authoragreement.csv",",");
 
-inserter = data.getInserter(disagreesAuth, fullobserved)
+inserter = data.getInserter(disagreesAuth, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"authordisagreement.csv", ",");
 
-inserter = data.getInserter(hasLabelPro, fullobserved)
+inserter = data.getInserter(hasLabelPro, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"labels.csv", ",");
 
-inserter = data.getInserter(hasTopic, fullobserved)
+inserter = data.getInserter(hasTopic, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"post_topics.csv", ",");
 
-inserter = data.getInserter(writesPost, fullobserved)
+inserter = data.getInserter(writesPost, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"author_posts.csv", ",");
 
-inserter = data.getInserter(topic, fullobserved)
-InserterUtils.loadDelimitedData(inserter, dir+"topic.txt");
+inserter = data.getInserter(topic, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"topics.csv", ",");
 
-inserter = data.getInserter(author, fullobserved)
+inserter = data.getInserter(author, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"authors.csv", ",")
 
 //inserter = data.getInserter(authorTopic, fullobserved)
@@ -185,11 +188,12 @@ InserterUtils.loadDelimitedData(inserter, dir+"authors.csv", ",")
  * Ground truth for training data for weight learning
  */
 
-inserter = data.getInserter(isProPost, groundtruth)
+inserter = data.getInserter(isProPost, truth_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"post_pro.csv",",");
 
-inserter = data.getInserter(isProAuth, groundtruth)
+inserter = data.getInserter(isProAuth, truth_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
+
 
 /*
  * Testing split for model inference
@@ -198,36 +202,41 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
 def testdir = 'data'+java.io.File.separator+'test'+java.io.File.separator;
 
 
-//inserter = data.getInserter(agreesAuth, test)
-//InserterUtils.loadDelimitedData(inserter, testdir+"agreesAuth.txt");
-//
-//inserter = data.getInserter(disagreesAuth, test)
-//InserterUtils.loadDelimitedData(inserter, testdir+"disagreesAuth.txt");
-//
-//inserter = data.getInserter(hasLabelPro, test)
-//InserterUtils.loadDelimitedData(inserter, testdir+"hasLabelPro.txt");
-//
-//inserter = data.getInserter(hasTopic, test)
-//InserterUtils.loadDelimitedData(inserter, testdir+"hasTopic.txt");
-//
-//inserter = data.getInserter(writesPost, test)
-//InserterUtils.loadDelimitedData(inserter, testdir+"writesPost.txt");
-//
-//inserter = data.getInserter(topic, test)
-//InserterUtils.loadDelimitedData(inserter, testdir+"topic.txt");
+inserter = data.getInserter(agreesAuth, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"authoragreement.csv",",");
 
-Database observed = data.getDatabase(fullobserved, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic, author] as Set);
-Database truedata = data.getDatabase(groundtruth, [isProPost, isProAuth] as Set);
+inserter = data.getInserter(disagreesAuth, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"authordisagreement.csv", ",");
 
+inserter = data.getInserter(hasLabelPro, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"labels.csv", ",");
+
+inserter = data.getInserter(hasTopic, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"post_topics.csv", ",");
+
+inserter = data.getInserter(writesPost, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"author_posts.csv",",");
+
+inserter = data.getInserter(topic, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"topics.csv",",");
+
+inserter = data.getInserter(isProPost, truth_te)
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"post_pro.csv",",");
+
+inserter = data.getInserter(isProAuth, truth_te)
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"authorpro.csv", ",");
+
+Database trainDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic, author] as Set, observed_tr);
+Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
 
 /* Populate isProPost in observed DB. */
-DatabasePopulator dbPop = new DatabasePopulator(observed);
-dbPop.populateFromDB(truedata, isProPost);
+DatabasePopulator dbPop = new DatabasePopulator(trainDB);
+dbPop.populateFromDB(truthDB, isProPost);
 
 
 /* Populate isProAuth in observed DB. */
-DatabasePopulator populator = new DatabasePopulator(observed);
-populator.populateFromDB(truedata, isProAuth);
+DatabasePopulator populator = new DatabasePopulator(trainDB);
+populator.populateFromDB(truthDB, isProAuth);
 
 //int rv = 0, ob = 0
 //ResultList allGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
@@ -276,10 +285,46 @@ populator.populateFromDB(truedata, isProAuth);
 //	}
 //}
 
-MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, observed, truedata, cb);
+MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, trainDB, truthDB, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "
 weightLearning.close();
 
 println model;
+
+Database testDB = data.getDatabase(predict_te, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic, author] as Set, observed_te);
+Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth] as Set)
+
+/* Populate isProPost in test DB. */
+DatabasePopulator test_pop = new DatabasePopulator(testDB);
+test_pop.populateFromDB(testTruthDB, isProPost);
+
+
+/* Populate isProAuth in test DB. */
+DatabasePopulator test_populator = new DatabasePopulator(testDB);
+test_populator.populateFromDB(testTruthDB, isProAuth);
+
+/*
+ * Inference
+ */
+MPEInference mpe = new MPEInference(model, testDB, cb)
+FullInferenceResult result = mpe.mpeInference()
+System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
+
+/* Evaluation */
+def comparator = new DiscretePredictionComparator(testDB)
+comparator.setBaseline(testTruthDB)
+comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
+comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
+
+int totalTestExamples = testTruthDB.size()
+System.out.println("totalTestExamples " + totalTestExamples)
+DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
+System.out.println("F1 score " + stats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+
+testTruthDB.close()
+testDB.close()
+trainDB.close()
+truthDB.close()
+
