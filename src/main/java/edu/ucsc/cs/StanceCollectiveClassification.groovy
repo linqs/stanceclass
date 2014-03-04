@@ -305,26 +305,29 @@ test_pop.populateFromDB(testTruthDB, isProPost);
 DatabasePopulator test_populator = new DatabasePopulator(testDB);
 test_populator.populateFromDB(testTruthDB, isProAuth);
 
+
 /*
  * Inference
  */
+
 MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
 
 /* Evaluation */
+
 def comparator = new DiscretePredictionComparator(testDB)
 comparator.setBaseline(testTruthDB)
 comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
 comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
 
-int totalTestExamples = testTruthDB.size()
-System.out.println("totalTestExamples " + totalTestExamples)
+Set<GroundAtom> groundings = Queries.getAllAtoms(testTruthDB, isProPost)
+int totalTestExamples = groundings.size()
 DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
-System.out.println("F1 score " + stats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+println "Accuracy"
+println stats.getAccuracy()
 
 testTruthDB.close()
 testDB.close()
 trainDB.close()
 truthDB.close()
-

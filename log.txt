@@ -84,3 +84,9 @@
 27588 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 6930 instances of rule {5.0} ( ( DISAGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & ISPROAUTH(A1, T) ) >> ~( ISPROAUTH(A2, T) ) {squared}
 27905 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 6930 instances of rule {5.0} ( ( ( DISAGREESAUTH(A1, A2, P) & #NONSYMMETRIC(A1, A2) ) & TOPIC(T) ) & ~( ISPROAUTH(A1, T) ) ) >> ISPROAUTH(A2, T) {squared}
 28183 [main] DEBUG edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel  - Grounded 3584 instances of rule {0.01} HASLABELPRO(P, T) >> ISPROPOST(P, T) {squared}
+0    [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.dbPath. Returning default of /var/folders/kC/kCIdTCoXHf0f2IDAJ6CnBE+++TI/-Tmp-//stance-classification.
+708  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.valuecolumn. Returning default of truth.
+708  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.confidencecolumn. Returning default of confidence.
+708  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - No value found for option stance-classification.rdbmsdatastore.partitioncolumn. Returning default of partition.
+743  [main] INFO  edu.umd.cs.psl.config.ConfigManager  - Found value true for option stance-classification.rdbmsdatastore.usestringids.
+798  [main] DEBUG edu.umd.cs.psl.database.rdbms.RDBMSDataStore  - Registered 0 pre-existing predicates from RDBMS.
