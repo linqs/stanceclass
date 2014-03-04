@@ -324,8 +324,23 @@ comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as
 Set<GroundAtom> groundings = Queries.getAllAtoms(testTruthDB, isProPost)
 int totalTestExamples = groundings.size()
 DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
-println "Accuracy"
-println stats.getAccuracy()
+System.out.println("Accuracy: " + stats.getAccuracy())
+System.out.println("F1: " + stats.getF1(BinaryClass.POSITIVE))
+System.out.println("Precision: " + stats.getPrecision(BinaryClass.POSITIVE))
+System.out.println("Recall: " + stats.getRecall(BinaryClass.POSITIVE))
+System.out.println("False Positive: " + stats.getFalsePositives())
+
+comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
+comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
+
+Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruthDB, isProAuth)
+totalTestExamples = authorGroundings.size()
+DiscretePredictionStatistics authorstats = comparator.compare(isProPost, totalTestExamples)
+System.out.println("Accuracy: " + authorstats.getAccuracy())
+System.out.println("F1: " + authorstats.getF1(BinaryClass.POSITIVE))
+System.out.println("Precision: " + authorstats.getPrecision(BinaryClass.POSITIVE))
+System.out.println("Recall: " + authorstats.getRecall(BinaryClass.POSITIVE))
+System.out.println("False Positive: " + authorstats.getFalsePositives())
 
 testTruthDB.close()
 testDB.close()
