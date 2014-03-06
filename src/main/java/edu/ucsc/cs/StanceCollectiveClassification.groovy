@@ -79,7 +79,7 @@ model.add predicate: "disagreesAuth" , types:[ArgumentType.UniqueID, ArgumentTyp
 model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 model.add predicate: "topic" , types:[ArgumentType.String]
-model.add predicate: "author" , types:[ArgumentType.UniqueID]
+//model.add predicate: "author" , types:[ArgumentType.UniqueID]
 //model.add predicate: "authorTopic" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 /*
@@ -100,7 +100,7 @@ model.add predicate: "author" , types:[ArgumentType.UniqueID]
 
 
 model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 5
-model.add rule : (~(isProPost(P, T)) & writesPost(A, P)) >> ~(isProAuth(A, T)), weight : 5
+model.add rule : (~(isProPost(P, T)) & writesPost(A, P) & hasTopic(P, T))>> ~(isProAuth(A, T)), weight : 5
 
 
 
@@ -119,10 +119,10 @@ model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(isProPost(P1, T))) >> isPr
 */
 
 
-model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 5
-model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 5
-model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 5
-model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 5
+model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 5
+model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 5
+model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 5
+model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & topic(T) & hasTopic(P, T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 5
 
 
 /*
@@ -178,8 +178,8 @@ InserterUtils.loadDelimitedData(inserter, dir+"author_posts.csv", ",");
 inserter = data.getInserter(topic, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"topics.csv", ",");
 
-inserter = data.getInserter(author, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"authors.csv", ",")
+//inserter = data.getInserter(author, observed_tr)
+//InserterUtils.loadDelimitedData(inserter, dir+"authors.csv", ",")
 
 //inserter = data.getInserter(authorTopic, fullobserved)
 //InserterUtils.loadDelimitedData(inserter, dir+"authortopicgroundings.csv", ",")
@@ -223,10 +223,10 @@ InserterUtils.loadDelimitedData(inserter, testdir+"topics.csv",",");
 inserter = data.getInserter(isProPost, truth_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"post_pro.csv",",");
 
-inserter = data.getInserter(isProAuth, truth_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"authorpro.csv", ",");
+//inserter = data.getInserter(isProAuth, truth_te)
+//InserterUtils.loadDelimitedDataTruth(inserter, testdir+"authorpro.csv", ",");
 
-Database trainDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic, author] as Set, observed_tr);
+Database trainDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
 
 /* Populate isProPost in observed DB. */
@@ -293,7 +293,7 @@ weightLearning.close();
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic, author] as Set, observed_te);
+Database testDB = data.getDatabase(predict_te, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
 Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth] as Set)
 
 /* Populate isProPost in test DB. */
@@ -335,7 +335,7 @@ comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as
 
 Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruthDB, isProAuth)
 totalTestExamples = authorGroundings.size()
-DiscretePredictionStatistics authorstats = comparator.compare(isProPost, totalTestExamples)
+DiscretePredictionStatistics authorstats = comparator.compare(isProAuth, totalTestExamples)
 System.out.println("Accuracy: " + authorstats.getAccuracy())
 System.out.println("F1: " + authorstats.getF1(BinaryClass.POSITIVE))
 System.out.println("Precision: " + authorstats.getPrecision(BinaryClass.POSITIVE))
