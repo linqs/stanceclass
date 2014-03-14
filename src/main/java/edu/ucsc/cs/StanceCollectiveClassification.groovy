@@ -70,11 +70,12 @@ PSLModel model = new PSLModel(this, data)
 model.add predicate: "writesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
 //model.add predicate: "participatesIn" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
 model.add predicate: "hasTopic" , types:[ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "isProAuth" , types:[ArgumentType.UniqueID, ArgumentType.String]
+//model.add predicate: "isProAuth" , types:[ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "agreesAuth" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
-model.add predicate: "disagreesAuth" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
-//model.add predicate: "agreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+//model.add predicate: "agreesAuth" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
+//model.add predicate: "disagreesAuth" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
+model.add predicate: "agreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+model.add predicate: "disagreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
 
 model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
@@ -98,32 +99,27 @@ model.add predicate: "topic" , types:[ArgumentType.String]
  */
 
 
-
-model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 5
-model.add rule : (~(isProPost(P, T)) & writesPost(A, P) & hasTopic(P, T))>> ~(isProAuth(A, T)), weight : 5
-
-
-
-//model.add rule : (agreesPost(P1, P2) & (P1^P2) & writesPost(A1, P1) & writesPost(A2, P2)) >> agreesAuth(A1, A2), weight : 5
-//model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & writesPost(A1, P1) & writesPost(A2, P2)) >> ~(agreesAuth(A1, A2)), weight : 5
+/*
+model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 1
+model.add rule : (~(isProPost(P, T)) & writesPost(A, P) & hasTopic(P, T))>> ~(isProAuth(A, T)), weight : 1
+*/
 
 /*
  * Rules for relating stance with agreement/disagreement
  */
 
+model.add rule : (agreesPost(P1, P2) & (P1^P2) & isProPost(P1, T)) >> isProPost(P2, T), weight : 1
+model.add rule : (agreesPost(P1, P2) & (P1^P2) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight : 1
+model.add rule : (disagreesPost(P1, P2) & (P1^P2) & isProPost(P1, T)) >> ~(isProPost(P2, T)), weight : 1
+model.add rule : (disagreesPost(P1, P2) & (P1^P2) & topic(T) & hasTopic(P1, T) & hasTopic(P2, T) & ~(isProPost(P1, T))) >> isProPost(P2, T), weight : 1
+
+
 /*
-model.add rule : (agreesPost(P1, P2) & (P1^P2) & isProPost(P1, T)) >> isProPost(P2, T), weight : 5
-model.add rule : (agreesPost(P1, P2) & (P1^P2) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight : 5
-model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & isProPost(P1, T)) >> ~(isProPost(P2, T)), weight : 5
-model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(isProPost(P1, T))) >> isProPost(P2, T), weight : 5
+model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & isProAuth(A1, T))>> isProAuth(A2, T), weight : 1
+model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
+model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
+model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & topic(T) & hasTopic(P, T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
 */
-
-
-model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 5
-model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 5
-model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 5
-model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & topic(T) & hasTopic(P, T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 5
-
 
 /*
  * Rules for propagating disagreement/agreement through the network
@@ -133,18 +129,19 @@ model.add rule : (agreesPost(P1, P2) & (P1^P2) & agreesPost(P2, P3) & (P2^P3) & 
 model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & agreesPost(P2, P3) & (P2^P3) & (P1^P3)) >> ~(agreesPost(P1, P3)), weight : 5
 model.add rule : (agreesPost(P1, P2) & (P1^P2) & ~(agreesPost(P2, P3)) & (P2^P3) & (P1^P3)) >> ~(agreesPost(P1, P3)), weight : 5
 model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(agreesPost(P2, P3)) & (P2^P3) & (P1^P3)) >> agreesPost(P1, P3), weight : 5
+*/
 
-model.add rule : (agreesAuth(P1, P2) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 5
-model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 5
-model.add rule : (agreesAuth(P1, P2) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 5
-model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 5
-
+/*
+model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & agreesAuth(A2, A3, P2) & (A2^A3) & (A1^A3)) >> agreesAuth(P1, P3), weight : 1
+model.add rule : (~(agreesAuth(A1, A2, P)) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 1
+model.add rule : (agreesAuth(P1, P2) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 1
+model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 1
 */
 
 //Prior that the label given by the text classifier is indeed the stance label
 
-model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 0.01
-model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 0.01
+model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 1
+model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 1
 
 /*
  * Inserting data into the data store
@@ -159,15 +156,21 @@ Partition truth_te = new Partition(5)
 
 def dir = 'data'+java.io.File.separator+'train'+java.io.File.separator;
 
-
+/*
 inserter = data.getInserter(agreesAuth, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"authoragreement.csv",",");
 
 inserter = data.getInserter(disagreesAuth, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"authordisagreement.csv", ",");
+*/
+inserter = data.getInserter(agreesPost, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"postagreement.csv",",");
+
+inserter = data.getInserter(disagreesPost, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"postdisagreement.csv", ",");
 
 inserter = data.getInserter(hasLabelPro, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"labels.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"labels.csv", ",");
 
 inserter = data.getInserter(hasTopic, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"post_topics.csv", ",");
@@ -191,8 +194,8 @@ InserterUtils.loadDelimitedData(inserter, dir+"topics.csv", ",");
 inserter = data.getInserter(isProPost, truth_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"post_pro.csv",",");
 
-inserter = data.getInserter(isProAuth, truth_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
+//inserter = data.getInserter(isProAuth, truth_tr)
+//InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
 
 
 /*
@@ -201,15 +204,21 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
 
 def testdir = 'data'+java.io.File.separator+'test'+java.io.File.separator;
 
-
+/*
 inserter = data.getInserter(agreesAuth, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"authoragreement.csv",",");
 
 inserter = data.getInserter(disagreesAuth, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"authordisagreement.csv", ",");
+*/
+inserter = data.getInserter(agreesPost, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"postagreement.csv",",");
+
+inserter = data.getInserter(disagreesPost, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"postdisagreement.csv", ",");
 
 inserter = data.getInserter(hasLabelPro, observed_te)
-InserterUtils.loadDelimitedData(inserter, testdir+"labels.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"labels.csv", ",");
 
 inserter = data.getInserter(hasTopic, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"post_topics.csv", ",");
@@ -226,8 +235,8 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir+"post_pro.csv",",");
 //inserter = data.getInserter(isProAuth, truth_te)
 //InserterUtils.loadDelimitedDataTruth(inserter, testdir+"authorpro.csv", ",");
 
-Database trainDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
-Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
+Database trainDB = data.getDatabase(predict_tr, [agreesPost, disagreesPost, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
+Database truthDB = data.getDatabase(truth_tr, [isProPost] as Set)
 
 /* Populate isProPost in observed DB. */
 DatabasePopulator dbPop = new DatabasePopulator(trainDB);
@@ -235,8 +244,10 @@ dbPop.populateFromDB(truthDB, isProPost);
 
 
 /* Populate isProAuth in observed DB. */
+/*
 DatabasePopulator populator = new DatabasePopulator(trainDB);
 populator.populateFromDB(truthDB, isProAuth);
+*/
 
 //int rv = 0, ob = 0
 //ResultList allGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
@@ -285,16 +296,26 @@ populator.populateFromDB(truthDB, isProAuth);
 //	}
 //}
 
+
+
 MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, trainDB, truthDB, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "
 weightLearning.close();
 
+
+/*
+MaxPseudoLikelihood mlpe = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
+println "weight learning with max pseudolikelihood"
+mlpe.learn();
+println "finished weight learning with max pseudolikelihood"
+mlpe.close();
+*/
 println model;
 
-Database testDB = data.getDatabase(predict_te, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
-Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth] as Set)
+Database testDB = data.getDatabase(predict_te, [agreesPost, disagreesPost, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
+Database testTruthDB = data.getDatabase(truth_te, [isProPost] as Set)
 
 /* Populate isProPost in test DB. */
 DatabasePopulator test_pop = new DatabasePopulator(testDB);
@@ -302,9 +323,10 @@ test_pop.populateFromDB(testTruthDB, isProPost);
 
 
 /* Populate isProAuth in test DB. */
+/*
 DatabasePopulator test_populator = new DatabasePopulator(testDB);
 test_populator.populateFromDB(testTruthDB, isProAuth);
-
+*/
 
 /*
  * Inference
@@ -314,7 +336,33 @@ MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
 
+/**
+Set<GroundAtom> postresultgroundings = Queries.getAllAtoms(testDB, isProPost)
+new File("postresults.csv").withWriter { out -> postresultgroundings.each() 
+    {atom -> out.writeLine(atom.toString() + "," + atom.getValue())}}
+    
+Set<GroundAtom> authorResultgroundings = Queries.getAllAtoms(testDB, isProAuth)
+new File("authorresults.csv").withWriter { out -> authorResultgroundings.each() 
+    {atom -> out.writeLine(atom.toString() + "," + atom.getValue())}}
+
+Set<GroundAtom> postTruth = Queries.getAllAtoms(testTruthDB, isProPost)
+new File("posttruth.csv").withWriter { out -> postTruth.each() 
+    {atom -> out.writeLine(atom.toString() + "," + atom.getValue())}}        
+
+Set<GroundAtom> authorTruth = Queries.getAllAtoms(testTruthDB, isProAuth)
+new File("authortruth.csv").withWriter { out -> authorTruth.each() 
+    {atom -> out.writeLine(atom.toString() + "," + atom.getValue())}}
+    */
+//def out = new File('postresults.csv')
+
+/*Printing results*/
+/*
+for (GroundAtom atom : Queries.getAllAtoms(testDB, isProPost))
+    out.append(atom.toString() + "," + atom.getValue())
+    out.append(System.getProperty("line.separator"))
+*/
 /* Evaluation */
+
 
 def comparator = new DiscretePredictionComparator(testDB)
 comparator.setBaseline(testTruthDB)
@@ -325,11 +373,12 @@ Set<GroundAtom> groundings = Queries.getAllAtoms(testTruthDB, isProPost)
 int totalTestExamples = groundings.size()
 DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
 System.out.println("Accuracy: " + stats.getAccuracy())
-System.out.println("F1: " + stats.getF1(BinaryClass.POSITIVE))
-System.out.println("Precision: " + stats.getPrecision(BinaryClass.POSITIVE))
-System.out.println("Recall: " + stats.getRecall(BinaryClass.POSITIVE))
-System.out.println("False Positive: " + stats.getFalsePositives())
+System.out.println("F1: " + stats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+//System.out.println("False Positive: " + stats.getFalsePositives())
 
+/**
 comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
 comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
 
@@ -337,10 +386,11 @@ Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruthDB, isProAuth)
 totalTestExamples = authorGroundings.size()
 DiscretePredictionStatistics authorstats = comparator.compare(isProAuth, totalTestExamples)
 System.out.println("Accuracy: " + authorstats.getAccuracy())
-System.out.println("F1: " + authorstats.getF1(BinaryClass.POSITIVE))
-System.out.println("Precision: " + authorstats.getPrecision(BinaryClass.POSITIVE))
-System.out.println("Recall: " + authorstats.getRecall(BinaryClass.POSITIVE))
-System.out.println("False Positive: " + authorstats.getFalsePositives())
+System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+//System.out.println("False Positive: " + authorstats.getFalsePositives())
+*/
 
 testTruthDB.close()
 testDB.close()
