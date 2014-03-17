@@ -1,7 +1,9 @@
 package edu.ucsc.cs
 
 import java.util.Set;
-
+import edu.umd.cs.bachuai13.util.DataOutputter;
+import edu.umd.cs.bachuai13.util.FoldUtils;
+import edu.umd.cs.bachuai13.util.GroundingWrapper;
 import edu.umd.cs.psl.application.inference.MPEInference
 import edu.umd.cs.psl.application.inference.LazyMPEInference;
 import edu.umd.cs.psl.application.learning.weight.maxlikelihood.LazyMaxLikelihoodMPE;
@@ -167,7 +169,7 @@ inserter = data.getInserter(disagreesAuth, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"authordisagreement.csv", ",");
 
 inserter = data.getInserter(hasLabelPro, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"labels.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"labels.csv", ",");
 
 inserter = data.getInserter(hasTopic, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"post_topics.csv", ",");
@@ -209,7 +211,7 @@ inserter = data.getInserter(disagreesAuth, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"authordisagreement.csv", ",");
 
 inserter = data.getInserter(hasLabelPro, observed_te)
-InserterUtils.loadDelimitedData(inserter, testdir+"labels.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"labels.csv", ",");
 
 inserter = data.getInserter(hasTopic, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"post_topics.csv", ",");
@@ -223,8 +225,12 @@ InserterUtils.loadDelimitedData(inserter, testdir+"topics.csv",",");
 inserter = data.getInserter(isProPost, truth_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"post_pro.csv",",");
 
-//inserter = data.getInserter(isProAuth, truth_te)
-//InserterUtils.loadDelimitedDataTruth(inserter, testdir+"authorpro.csv", ",");
+inserter = data.getInserter(isProAuth, truth_te)
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"authorpro.csv", ",");
+
+/*
+ * Set up training databases for weight learning
+ */
 
 Database trainDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
@@ -238,84 +244,167 @@ dbPop.populateFromDB(truthDB, isProPost);
 DatabasePopulator populator = new DatabasePopulator(trainDB);
 populator.populateFromDB(truthDB, isProAuth);
 
-//int rv = 0, ob = 0
-//ResultList allGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
-//for (int i = 0; i < allGroundings.size(); i++) {
-//	GroundTerm [] grounding = allGroundings.get(i)
-//	GroundAtom atom = observed.getAtom(hasLabelPro, grounding)
-//	if (atom instanceof RandomVariableAtom) {
-//		rv++
-//		observed.commit((RandomVariableAtom) atom);
-//	} else
-//		ob++
-//}
-//
-//int rv1 = 0, ob1 = 0
-//ResultList allGroundings1 = observed.executeQuery(Queries.getQueryForAllAtoms(hasTopic))
-//for (int i = 0; i < allGroundings1.size(); i++) {
-//	GroundTerm [] grounding = allGroundings1.get(i)
-//	GroundAtom atom = observed.getAtom(isProPost, grounding)
-//	if (atom instanceof RandomVariableAtom) {
-//		rv1++
-//		observed.commit((RandomVariableAtom) atom);
-//	} else
-//		ob1++
-//}
-
-//ResultList authorGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(author))
-//ResultList topicGroundings = observed.executeQuery(Queries.getQueryForAllAtoms(topic))
-//
-//GroundTerm [] aGroundings = new GroundTerm[authorGroundings.size()];
-//GroundTerm [] tGroundings = new GroundTerm[topicGroundings.size()];
-//
-//for(int i = 0; i < authorGroundings.size(); i++){
-//	aGroundings = authorGroundings.get(i)
-//}
-//
-//for(int i = 0; i < topicGroundings.size(); i++){
-//	tGroundings = topicGroundings.get(i)
-//}
-//
-//for (GroundTerm author : aGroundings) {
-//	for (GroundTerm topic : tGroundings) {
-//		GroundAtom atom = truedata.getAtom(IsProAuth, author, topic)
-//		if (atom instanceof RandomVariableAtom) {
-//			observed.commit((RandomVariableAtom) atom);
-//		}
-//	}
-//}
-
 MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, trainDB, truthDB, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "
 weightLearning.close();
 
+/*
+MaxPseudoLikelihood mple = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
+println "about to start weight learning"
+mple.learn();
+println " finished weight learning "
+mlpe.close();
+*/
+
 println model;
 
+/*
+ * Set up 8 fold cross validation with testing data for better evaluation
+ */
+folds = 8
+
+List<Partition> testReadPartitions = new ArrayList<Partition>(folds)
+List<Partition> testWritePartitions = new ArrayList<Partition>(folds)
+List<Partition> testLabelPartitions = new ArrayList<Partition>(folds)
+
+for (int i = 0; i < folds; i++){
+	testReadPartitions.add(i, new Partition(i + 6))
+	testWritePartitions.add(i, new Partition(i + folds + 6))
+	testLabelPartitions.add(i, new Partition(i + 2*folds + 6))
+}
+
+List<Set<GroundingWrapper>> cvGroundings = FoldUtils.splitGroundings(data, 
+	[agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic, isProPost, isProAuth], [observed_te, truth_te], folds)
+
+for (int i = 0; i < folds; i++){
+	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), agreesAuth, cvGroundings.get(i))
+	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), disagreesAuth, cvGroundings.get(i))
+	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), hasLabelPro, cvGroundings.get(i))
+	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), hasTopic, cvGroundings.get(i))
+	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), writePost, cvGroundings.get(i))
+	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), topic, cvGroundings.get(i))
+	FoldUtils.copy(data, truth_te, testLabelPartitions.get(i), isProPost, cvGroundings.get(i))
+	FoldUtils.copy(data, truth_te, testLabelPartitions.get(i), isProAuth, cvGroundings.get(i))
+}
+
+//List<List<Double []>> results = new ArrayList<List<Double []>>()
+
+for (int fold = 0; fold < folds; fold++){
+	/*
+	 * Test set: 
+	 * all closed predicates data in the whole dataset
+	 * all open predicates except partition 'fold'
+	 * target: predict open predicates of partition 'fold'
+	 */
+	ArrayList<Partition> currentTestReadPartitions = new ArrayList<Partition>();
+	int trainingTarget = (fold - 1) % folds
+	if(trainingTarget < 0) trainingTarget += folds
+	
+	for (int i = 0; i < folds; i++){
+		if(i != fold) {
+			currentTestReadPartitions.add(testLabelPartitions.get(i))
+		}
+		currentTestReadPartitions.add(testReadPartitions.get(i))
+	}
+	
+	Partition currentTestLabelPartition = testLabelPartitions.get(fold)
+	
+	Database cvTestDB = data.getDatabase(testWritePartitions.get(fold), (Partition []) currentTestReadPartitions.toArray())
+	Database cvTestTruthDB = data.getDatabase(testLabelPartitions.get(fold), currentTestLabelPartition)
+	
+	DatabasePopulator cvPop = new DatabasePopulator(cvTestDB)
+	cvPop.populateFromDB(cvTestTruthDB, isProPost)
+	
+	cvPop.populateFromDB(cvTestTruthDB, isProAuth)
+	
+	Partition dummy = new Partition(99999)
+	Partition dummy2 = new Partition(29999)
+	
+	MPEInference mpe = new MPEInference(model, cvTestDB, cb)
+	FullInferenceResult result = mpe.mpeInference()
+	
+	def comparator = new DiscretePredictionComparator(cvTestDB)
+	comparator.setBaseline(cvTestTruthDB)
+	comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
+	comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
+	
+	Set<GroundAtom> groundings = Queries.getAllAtoms(cvTestTruthDB, isProPost)
+	int totalTestExamples = groundings.size()
+	DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
+	System.out.println("Accuracy: " + stats.getAccuracy())
+	System.out.println("F1: " + stats.getF1(BinaryClass.POSITIVE))
+	System.out.println("Precision: " + stats.getPrecision(BinaryClass.POSITIVE))
+	System.out.println("Recall: " + stats.getRecall(BinaryClass.POSITIVE))
+	System.out.println("False Positive: " + stats.getFalsePositives())
+	
+	comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
+	comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
+	
+	Set<GroundAtom> authorGroundings = Queries.getAllAtoms(cvTestTruthDB, isProAuth)
+	totalTestExamples = authorGroundings.size()
+	DiscretePredictionStatistics authorstats = comparator.compare(isProAuth, totalTestExamples)
+	System.out.println("Accuracy: " + authorstats.getAccuracy())
+	System.out.println("F1: " + authorstats.getF1(BinaryClass.POSITIVE))
+	System.out.println("Precision: " + authorstats.getPrecision(BinaryClass.POSITIVE))
+	System.out.println("Recall: " + authorstats.getRecall(BinaryClass.POSITIVE))
+	System.out.println("False Positive: " + authorstats.getFalsePositives())
+	
+	cvTestDB.close()
+	cvTestTruthDB.close()
+}
+
+trainDB.close()
+truthDB.close()
+
+/*
+ * Create and populate databases for weight learning with training data
+ */
+
+/*
+Database trainDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
+Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
+*/
+/* Populate isProPost in observed DB. */
+
+/*
+DatabasePopulator dbPop = new DatabasePopulator(trainDB);
+dbPop.populateFromDB(truthDB, isProPost);
+*/
+
+/* Populate isProAuth in observed DB. */
+/*
+DatabasePopulator populator = new DatabasePopulator(trainDB);
+populator.populateFromDB(truthDB, isProAuth);
+*/
+
+/*
 Database testDB = data.getDatabase(predict_te, [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
 Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth] as Set)
-
+*/
 /* Populate isProPost in test DB. */
+/*
 DatabasePopulator test_pop = new DatabasePopulator(testDB);
 test_pop.populateFromDB(testTruthDB, isProPost);
-
+*/
 
 /* Populate isProAuth in test DB. */
+/*
 DatabasePopulator test_populator = new DatabasePopulator(testDB);
 test_populator.populateFromDB(testTruthDB, isProAuth);
-
+*/
 
 /*
  * Inference
  */
-
+/*
 MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
-
+*/
 /* Evaluation */
-
+/*
 def comparator = new DiscretePredictionComparator(testDB)
 comparator.setBaseline(testTruthDB)
 comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
@@ -346,3 +435,4 @@ testTruthDB.close()
 testDB.close()
 trainDB.close()
 truthDB.close()
+*/
