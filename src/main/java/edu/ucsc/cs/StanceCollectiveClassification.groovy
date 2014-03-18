@@ -155,9 +155,14 @@ model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 0.01
 Partition observed_tr = new Partition(0)
 Partition predict_tr = new Partition(1)
 Partition truth_tr = new Partition(2)
-Partition observed_te = new Partition(3)
-Partition predict_te = new Partition(4)
-Partition truth_te = new Partition(5)
+Partition agreesAuth_observed_te = new Partition(3)
+Partition disagreesAuth_observed_te = new Partition(4)
+Partition hasTopic_observed_te = new Partition(5)
+Partition writesPost_observed_te = new Partition(6)
+Partition hasLabelPro_observed_te = new Partition(7)
+Partition topic_observed_te = new Partition(8)
+Partition predict_te = new Partition(9)
+Partition truth_te = new Partition(10)
 
 def dir = 'data'+java.io.File.separator+'train'+java.io.File.separator;
 
@@ -204,25 +209,25 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
 def testdir = 'data'+java.io.File.separator+'test'+java.io.File.separator;
 
 
-inserter = data.getInserter(agreesAuth, observed_te)
+inserter = data.getInserter(agreesAuth, agreesAuth_observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"authoragreement.csv",",");
 
-inserter = data.getInserter(disagreesAuth, observed_te)
+inserter = data.getInserter(disagreesAuth, disagreesAuth_observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"authordisagreement.csv", ",");
 
-inserter = data.getInserter(hasLabelPro, observed_te)
+inserter = data.getInserter(hasLabelPro, hasLabelPro_observed_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"labels.csv", ",");
 
-inserter = data.getInserter(hasTopic, observed_te)
+inserter = data.getInserter(hasTopic, hasTopic_observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"post_topics.csv", ",");
 
-inserter = data.getInserter(writesPost, observed_te)
+inserter = data.getInserter(writesPost, writesPost_observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"author_posts.csv",",");
 
-inserter = data.getInserter(topic, observed_te)
+inserter = data.getInserter(topic, topic_observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"topics.csv",",");
 
-inserter = data.getInserter(isProPost, truth_te)
+inserter = data.getInserter(isProPost, predict_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"post_pro.csv",",");
 
 inserter = data.getInserter(isProAuth, truth_te)
@@ -244,12 +249,13 @@ dbPop.populateFromDB(truthDB, isProPost);
 DatabasePopulator populator = new DatabasePopulator(trainDB);
 populator.populateFromDB(truthDB, isProAuth);
 
+/*
 MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, trainDB, truthDB, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "
 weightLearning.close();
-
+*/
 /*
 MaxPseudoLikelihood mple = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
 println "about to start weight learning"
@@ -270,25 +276,33 @@ List<Partition> testWritePartitions = new ArrayList<Partition>(folds)
 List<Partition> testLabelPartitions = new ArrayList<Partition>(folds)
 
 for (int i = 0; i < folds; i++){
-	testReadPartitions.add(i, new Partition(i + 6))
-	testWritePartitions.add(i, new Partition(i + folds + 6))
-	testLabelPartitions.add(i, new Partition(i + 2*folds + 6))
+	testReadPartitions.add(i, new Partition(i + 11))
+	testWritePartitions.add(i, new Partition(i + folds + 11))
+	testLabelPartitions.add(i, new Partition(i + 2*folds + 11))
 }
 
 List<Set<GroundingWrapper>> cvGroundings = FoldUtils.splitGroundings(data, 
-	[agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic, isProPost, isProAuth], [observed_te, truth_te], folds)
+	[isProPost, isProAuth, agreesAuth, disagreesAuth, writesPost, hasTopic, topic, hasLabelPro], [predict_te, truth_te, agreesAuth_observed_te, disagreesAuth_observed_te, writesPost_observed_te, hasLabelPro_observed_te, hasTopic_observed_te, topic_observed_te], folds)
 
 for (int i = 0; i < folds; i++){
-	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), agreesAuth, cvGroundings.get(i))
-	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), disagreesAuth, cvGroundings.get(i))
-	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), hasLabelPro, cvGroundings.get(i))
-	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), hasTopic, cvGroundings.get(i))
-	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), writePost, cvGroundings.get(i))
-	FoldUtils.copy(data, observed_te, testReadPartitions.get(i), topic, cvGroundings.get(i))
-	FoldUtils.copy(data, truth_te, testLabelPartitions.get(i), isProPost, cvGroundings.get(i))
-	FoldUtils.copy(data, truth_te, testLabelPartitions.get(i), isProAuth, cvGroundings.get(i))
+        FoldUtils.copy(data, predict_te, testLabelPartitions.get(i), isProPost, cvGroundings.get(i))
+		FoldUtils.copy(data, truth_te, testLabelPartitions.get(i), isProAuth, cvGroundings.get(i))
+		FoldUtils.copy(data, agreesAuth_observed_te, testReadPartitions.get(i), agreesAuth, cvGroundings.get(i))
+		FoldUtils.copy(data, disagreesAuth_observed_te, testReadPartitions.get(i), disagreesAuth, cvGroundings.get(i))
+		FoldUtils.copy(data, writesPost_observed_te, testReadPartitions.get(i), writesPost, cvGroundings.get(i))
+		FoldUtils.copy(data, hasLabelPro_observed_te, testReadPartitions.get(i), hasLabelPro, cvGroundings.get(i))
+		FoldUtils.copy(data, hasTopic_observed_te, testReadPartitions.get(i), hasTopic, cvGroundings.get(i))
+		FoldUtils.copy(data, topic_observed_te, testReadPartitions.get(i), topic, cvGroundings.get(i))
 }
 
+/*
+List<Set<GroundingWrapper>> aGroundings = FoldUtils.splitGroundings(data,
+	[isProAuth], [truth_te], folds)
+
+for (int i = 0; i < folds; i++){
+	FoldUtils.copy(data, truth_te, testReadPartitions.get(i), isProAuth, aGroundings.get(i))
+}
+*/
 //List<List<Double []>> results = new ArrayList<List<Double []>>()
 
 for (int fold = 0; fold < folds; fold++){
@@ -305,22 +319,29 @@ for (int fold = 0; fold < folds; fold++){
 	for (int i = 0; i < folds; i++){
 		if(i != fold) {
 			currentTestReadPartitions.add(testLabelPartitions.get(i))
+			currentTestReadPartitions.add(testReadPartitions.get(i))
 		}
-		currentTestReadPartitions.add(testReadPartitions.get(i))
 	}
+    //currentTestReadPartitions.add(observed_te)
+	//currentTestReadPartitions.add(truth_te)
 	
 	Partition currentTestLabelPartition = testLabelPartitions.get(fold)
 	
-	Database cvTestDB = data.getDatabase(testWritePartitions.get(fold), (Partition []) currentTestReadPartitions.toArray())
-	Database cvTestTruthDB = data.getDatabase(testLabelPartitions.get(fold), currentTestLabelPartition)
+	Partition dummy = new Partition(99999)
+	Partition dummy2 = new Partition(29999)
+	
+	Database cvTestDB = data.getDatabase(testWritePartitions.get(fold), [agreesAuth, disagreesAuth, hasLabelPro, hasTopic, writesPost, topic] as Set, (Partition []) currentTestReadPartitions.toArray())
+	Database cvTestTruthDB = data.getDatabase(currentTestLabelPartition, [isProPost, isProAuth] as Set)
+	//Database authorTruthDB = data.getDatabase(dummy, [isProAuth] as Set, truth_te)
 	
 	DatabasePopulator cvPop = new DatabasePopulator(cvTestDB)
 	cvPop.populateFromDB(cvTestTruthDB, isProPost)
 	
-	cvPop.populateFromDB(cvTestTruthDB, isProAuth)
+	DatabasePopulator authorPop = new DatabasePopulator(cvTestDB)
+	authorPop.populateFromDB(cvTestTruthDB, isProAuth)
 	
-	Partition dummy = new Partition(99999)
-	Partition dummy2 = new Partition(29999)
+	//cvPop.populateFromDB(cvTestTruthDB, isProAuth)
+
 	
 	MPEInference mpe = new MPEInference(model, cvTestDB, cb)
 	FullInferenceResult result = mpe.mpeInference()
@@ -339,6 +360,7 @@ for (int fold = 0; fold < folds; fold++){
 	System.out.println("Recall: " + stats.getRecall(BinaryClass.POSITIVE))
 	System.out.println("False Positive: " + stats.getFalsePositives())
 	
+        /*
 	comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
 	comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
 	
@@ -350,7 +372,7 @@ for (int fold = 0; fold < folds; fold++){
 	System.out.println("Precision: " + authorstats.getPrecision(BinaryClass.POSITIVE))
 	System.out.println("Recall: " + authorstats.getRecall(BinaryClass.POSITIVE))
 	System.out.println("False Positive: " + authorstats.getFalsePositives())
-	
+	*/
 	cvTestDB.close()
 	cvTestTruthDB.close()
 }
