@@ -151,16 +151,30 @@ model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 0.01
 /*
  * Inserting data into the data store
  */
+folds = 10
+List<Partition> partitions = new ArrayList<Partition>(folds*6)
+
+for (int i = 0; i < folds*6; i++){
+	partitions.add(i, new Partition(i))
+}
+
+Partition observed_tr;
+Partition predict_tr;
+Partition truth_tr;
+Partition observed_te;
+Partition predict_te;
+Partition truth_te;
+
 for (int i = 1; i <= 10; i++){
 	
 	def fold = 'fold' + String.valueOf(i) + java.io.File.separator
 
-	Partition observed_tr = new Partition(0)
-	Partition predict_tr = new Partition(1)
-	Partition truth_tr = new Partition(2)
-	Partition observed_te = new Partition(3)
-	Partition predict_te = new Partition(4)
-	Partition truth_te = new Partition(5)
+	observed_tr = partitions.get(i)
+	predict_tr = partitions.get(i + 1)
+	truth_tr = partitions.get(i + 2)
+	observed_te = partitions.get(i + 3)
+	predict_te = partitions.get(i + 4)
+	truth_te = partitions.get(i + 5)
 
 	def dir = 'data'+java.io.File.separator+ fold + 'train'+java.io.File.separator;
 
@@ -194,7 +208,7 @@ for (int i = 1; i <= 10; i++){
 	 */
 
 	inserter = data.getInserter(isProPost, truth_tr)
-	InserterUtils.loadDelimitedDataTruth(inserter, dir+"post_pro.csv",",");
+	InserterUtils.loadDelimitedDataTruth(inserter, dir+"postpro.csv",",");
 
 	inserter = data.getInserter(isProAuth, truth_tr)
 	InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
@@ -226,7 +240,7 @@ for (int i = 1; i <= 10; i++){
 	InserterUtils.loadDelimitedData(inserter, testdir+"topics.csv",",");
 
 	inserter = data.getInserter(isProPost, truth_te)
-	InserterUtils.loadDelimitedDataTruth(inserter, testdir+"post_pro.csv",",");
+	InserterUtils.loadDelimitedDataTruth(inserter, testdir+"postpro.csv",",");
 
 	inserter = data.getInserter(isProAuth, truth_te)
 	InserterUtils.loadDelimitedDataTruth(inserter, testdir+"authorpro.csv", ",");
@@ -298,9 +312,9 @@ for (int i = 1; i <= 10; i++){
 	int totalTestExamples = groundings.size()
 	DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
 	System.out.println("Accuracy: " + stats.getAccuracy())
-	System.out.println("F1: " + stats.getF1(BinaryClass.POSITIVE))
-	System.out.println("Precision: " + stats.getPrecision(BinaryClass.POSITIVE))
-	System.out.println("Recall: " + stats.getRecall(BinaryClass.POSITIVE))
+	System.out.println("F1: " + stats.getF1(DiscretePredictionStatistic.BinaryClass.POSITIVE))
+	System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistic.BinaryClass.POSITIVE))
+	System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistic.BinaryClass.POSITIVE))
 	System.out.println("False Positive: " + stats.getFalsePositives())
 
 	comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
@@ -310,9 +324,9 @@ for (int i = 1; i <= 10; i++){
 	totalTestExamples = authorGroundings.size()
 	DiscretePredictionStatistics authorstats = comparator.compare(isProAuth, totalTestExamples)
 	System.out.println("Accuracy: " + authorstats.getAccuracy())
-	System.out.println("F1: " + authorstats.getF1(BinaryClass.POSITIVE))
-	System.out.println("Precision: " + authorstats.getPrecision(BinaryClass.POSITIVE))
-	System.out.println("Recall: " + authorstats.getRecall(BinaryClass.POSITIVE))
+	System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistic.BinaryClass.POSITIVE))
+	System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistic.BinaryClass.POSITIVE))
+	System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistic.BinaryClass.POSITIVE))
 	System.out.println("False Positive: " + authorstats.getFalsePositives())
 
 	testTruthDB.close()
