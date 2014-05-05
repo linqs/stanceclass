@@ -81,7 +81,12 @@ model.add predicate: "disagreesAuth" , types:[ArgumentType.UniqueID, ArgumentTyp
 //model.add predicate: "disagreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
 model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "topic" , types:[ArgumentType.String]
-model.add predicate: "allInteractions", types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+
+model.add predicate: "supports" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+model.add predicate: "against" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+
+
+//model.add predicate: "allInteractions", types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 
 //model.add predicate: "author" , types:[ArgumentType.UniqueID]
 //model.add predicate: "authorTopic" , types:[ArgumentType.UniqueID, ArgumentType.String]
@@ -133,11 +138,16 @@ model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(is
 model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
 model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
 
+
+model.add rule : (supports(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
+model.add rule : (supports(A1, A2, T) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
+model.add rule : (against(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
+model.add rule : (against(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
 /*
  * Rules for propagating stance across topics
  */
-model.add rule : (agreesAuth(A1, A2, T) & participates(A1, T2) & participates(A2, T2)) >> agreesAuth(A1, A2, T2), weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & participates(A1, T2) & participates(A2, T2)) >> disagreesAuth(A1, A2, T2), weight : 1
+model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
+model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Rules for propagating disagreement/agreement through the network
@@ -174,7 +184,9 @@ Partition observed_te = new Partition(3);
 Partition predict_te = new Partition(4);
 Partition truth_te = new Partition(5);
 Partition dummy_tr = new Partition(6);
-Partition dummy_te = new Partition(7);
+Partition dummy_tr2 = new Partition(7);
+Partition dummy_te = new Partition(8);
+Partition dummy_te2 = new Partition(9);
 
 def dir = 'data'+java.io.File.separator+ foldStr + 'train'+java.io.File.separator;
 
@@ -214,7 +226,11 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
  * Used later on to populate training DB with all possible interactions
  */
 
-inserter = data.getInserter(allInteractions, dummy_tr)
+inserter = data.getInserter(supports, dummy_tr)
+InserterUtils.loadDelimitedData(inserter, dir + "interaction.csv", ",")
+
+
+inserter = data.getInserter(against, dummy_tr2)
 InserterUtils.loadDelimitedData(inserter, dir + "interaction.csv", ",")
 
 
@@ -256,7 +272,10 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir+"post_pro.csv",",");
 inserter = data.getInserter(isProAuth, truth_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"authorpro.csv", ",");
 
-inserter = data.getInserter(allInteractions, dummy_te)
+inserter = data.getInserter(supports, dummy_te)
+InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
+
+inserter = data.getInserter(against, dummy_te2)
 InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
 
 
@@ -264,9 +283,10 @@ InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
  * Set up training databases for weight learning
  */
 
-Database distributionDB = data.getDatabase(predict_tr, [participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
+Database distributionDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
-Database dummy_DB = data.getDatabase(dummy_tr, [allInteractions] as Set)
+Database dummy_DB = data.getDatabase(dummy_tr, [supports] as Set)
+Database dummy_DB2 = data.getDatabase(dummy_tr2, [against] as Set)
 
 /* Populate isProPost in observed DB. */
 DatabasePopulator dbPop = new DatabasePopulator(distributionDB);
@@ -281,7 +301,9 @@ populator.populateFromDB(truthDB, isProAuth);
  * Populate distribution DB with all possible interactions
  */
 dbPop = new DatabasePopulator(distributionDB);
-dbPop.populateFromDB(dummy_DB, allInteractions);
+dbPop.populateFromDB(dummy_DB, supports);
+
+dbPop.populateFromDB(dummy_DB2, against);
 
 //MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, distributionDB, truthDB, cb);
 HardEM weightLearning = new HardEM(model, distributionDB, truthDB, cb);
@@ -300,8 +322,11 @@ weightLearning.close();
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
-Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth, agreesAuth, disagreesAuth] as Set)
+Database testDB = data.getDatabase(predict_te, [agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
+Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth] as Set)
+
+Database dummy_test = data.getDatabase(dummy_te, [supports] as Set)
+Database dummy_test2 = data.getDatabase(dummy_te2, [against] as Set)
 
 /* Populate isProPost in test DB. */
 
@@ -314,20 +339,8 @@ test_pop.populateFromDB(testTruthDB, isProPost);
 DatabasePopulator test_populator = new DatabasePopulator(testDB);
 test_populator.populateFromDB(testTruthDB, isProAuth);
 
-/*
- * Populate agreesAuth in distribution DB
- */
-
-test_populator = new DatabasePopulator(testDB);
-dbPop.populateFromDB(testTruthDB, agreesAuth);
-
-/*
- * Populate disagreesAuth in distribution DB
- */
-
-test_populator = new DatabasePopulator(testDB);
-dbPop.populateFromDB(testTruthDB, disagreesAuth);
-
+test_populator.populateFromDB(dummy_test, supports);
+test_populator.populateFromDB(dummy_test2, against);
 
 /*
  * Inference
@@ -348,9 +361,9 @@ Set<GroundAtom> groundings = Queries.getAllAtoms(testTruthDB, isProPost)
 int totalTestExamples = groundings.size()
 DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
 System.out.println("Accuracy: " + stats.getAccuracy())
-System.out.println("F1: " + stats.getF1(DiscretePredictionStatistic.BinaryClass.POSITIVE))
-System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistic.BinaryClass.POSITIVE))
-System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistic.BinaryClass.POSITIVE))
+System.out.println("F1: " + stats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("False Positive: " + stats.getFalsePositives())
 
 comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
@@ -360,9 +373,9 @@ Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruthDB, isProAuth)
 totalTestExamples = authorGroundings.size()
 DiscretePredictionStatistics authorstats = comparator.compare(isProAuth, totalTestExamples)
 System.out.println("Accuracy: " + authorstats.getAccuracy())
-System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistic.BinaryClass.POSITIVE))
-System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistic.BinaryClass.POSITIVE))
-System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistic.BinaryClass.POSITIVE))
+System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("False Positive: " + authorstats.getFalsePositives())
 
 testTruthDB.close()
