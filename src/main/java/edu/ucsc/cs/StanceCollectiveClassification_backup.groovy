@@ -58,63 +58,63 @@ DataStore data = new RDBMSDataStore(new H2DatabaseDriver(Type.Disk, dbPath, true
 
 PSLModel model = new PSLModel(this, data)
 
-/* 
- * List of predicates with their argument types
- * writesPost(Author, Post) -- observed
- * participatesIn(Author, Topic) -- observed
- * hasTopic(Post, Topic) -- observed
- * isProAuth(Author, Topic) -- target
- * isProPost(Post, Topic) -- target
- * agreesAuth(Author, Author) -- observed 
- * agreesPost(Post, Post) -- observed
- * hasLabelPro(Post, Topic) -- observed
+/*
+ * Author predicates of the form: predicate(authorID, authorID, topic) 
+ * or (authorID, topic) 
+ * or (authorID, postID)
+ * Observed predicates
  */
 
 model.add predicate: "writesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
 model.add predicate: "participates" , types:[ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "hasTopic" , types:[ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "isProAuth" , types:[ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "agreesAuth" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "disagreesAuth" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
-//model.add predicate: "agreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
-//model.add predicate: "disagreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+
+/*
+ * Author predicates for social attitudes e.g. sarcasm, nasty, attack
+ */
+model.add predicate: "sarcastic" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+model.add predicate: "nasty" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+model.add predicate: "attacks" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+
+/*
+ * Post level observed predicates
+ */
+
+model.add predicate: "hasTopic" , types:[ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
+
+/*
+ * Auxiliary topic predicate
+ */
 model.add predicate: "topic" , types:[ArgumentType.String]
+
+
+/*
+ * Latent, open predicates for latent network
+ */
 
 model.add predicate: "supports" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "against" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 
-
-//model.add predicate: "allInteractions", types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
-
-//model.add predicate: "author" , types:[ArgumentType.UniqueID]
-//model.add predicate: "authorTopic" , types:[ArgumentType.UniqueID, ArgumentType.String]
-
 /*
- * Rules for consistency of any author's stance - these won't be necessary as 
- * the post/author interaction rules capture this in their groundings
+ * Target predicates
  */
+model.add predicate: "isProAuth" , types:[ArgumentType.UniqueID, ArgumentType.String]
+model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
-/*
- * model.add rule : (writesPost(A, P1) & writesPost(A, P2) & (P1^P2) & isProPost(P1, T)) >> isProPost(P2, T), weight : 5
- * model.add rule : (writesPost(A, P1) & writesPost(A, P2) & (P1^P2) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight: 5
- */
- 
+
+//model.add predicate: "agreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+//model.add predicate: "disagreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+
+
 /*
  * Rule expressing that an author and their post will have the same stances and same agreement behavior 
  * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
  */
 
-
-
 model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 1
 model.add rule : (~(isProPost(P, T)) & writesPost(A, P) & hasTopic(P, T))>> ~(isProAuth(A, T)), weight : 1
-
-
-
-//model.add rule : (agreesPost(P1, P2) & (P1^P2) & writesPost(A1, P1) & writesPost(A2, P2)) >> agreesAuth(A1, A2), weight : 5
-//model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & writesPost(A1, P1) & writesPost(A2, P2)) >> ~(agreesAuth(A1, A2)), weight : 5
 
 /*
  * Rules for relating stance with agreement/disagreement
@@ -126,49 +126,79 @@ model.add rule : (agreesPost(P1, P2) & (P1^P2) & ~(isProPost(P1, T))) >> ~(isPro
 model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & isProPost(P1, T)) >> ~(isProPost(P2, T)), weight : 1
 model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(isProPost(P1, T))) >> isProPost(P2, T), weight : 1
 */
-
 /*
-model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 5
-model.add rule : (agreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 5
-model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & hasTopic(P, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 5
-model.add rule : (disagreesAuth(A1, A2, P) & (A1^A2) & topic(T) & hasTopic(P, T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 5
-*/
 model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
 model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
 model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
 model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
+*/
 
+/*
+ * Propagating stance with the inferred network
+ */
 
 model.add rule : (supports(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
 model.add rule : (supports(A1, A2, T) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
 model.add rule : (against(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
 model.add rule : (against(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
+
 /*
- * Rules for propagating stance across topics
+ * Cross-topic agreement and disagreement
  */
 model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
 model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+model.add rule : (agreesAuth(A1, A2, T) & (A1^A2)) >> supports(A1, A2, T) , weight : 1
+model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2)) >> against(A1, A2, T) , weight : 1
+
+/*
+ * Rules relating sarcasm to against
+ */
+model.add rule : (sarcastic(A1, A2, P, T) & (A1^A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (sarcastic(A1, A2, P, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+
+/*
+ * Rules relating nastiness to against
+ */
+model.add rule : (nasty(A1, A2, T) & (A1^A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (nasty(A1, A2, P, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+
+/*
+ * Rules relating attacks to against
+ */
+model.add rule : (attacks(A1, A2, T) & (A1^A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (attacks(A1, A2, P, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+
 
 /*
  * Rules for propagating disagreement/agreement through the network
  * Doesn't do anything since agreement predicates are closed
  
-model.add rule : (agreesPost(P1, P2) & (P1^P2) & agreesPost(P2, P3) & (P2^P3) & (P1^P3)) >> agreesPost(P1, P3), weight : 5
-model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & agreesPost(P2, P3) & (P2^P3) & (P1^P3)) >> ~(agreesPost(P1, P3)), weight : 5
-model.add rule : (agreesPost(P1, P2) & (P1^P2) & ~(agreesPost(P2, P3)) & (P2^P3) & (P1^P3)) >> ~(agreesPost(P1, P3)), weight : 5
-model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(agreesPost(P2, P3)) & (P2^P3) & (P1^P3)) >> agreesPost(P1, P3), weight : 5
-
 model.add rule : (agreesAuth(P1, P2) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 5
 model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 5
 model.add rule : (agreesAuth(P1, P2) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 5
 model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 5
-
 */
+
+/*
+ * Transitivity/triad rules for supports/against
+ */
+
+model.add rule : (supports(A1, A2, T) & support(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
+model.add rule : (supports(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
+
+model.add rule : (against(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
+model.add rule : (against(A1, A2, T) & support(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
+
+model.add rule : (supports(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
+model.add rule : (supports(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
+
+model.add rule : (against(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
+model.add rule : (against(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
 
 //Prior that the label given by the text classifier is indeed the stance label
 
-model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 0.01
-model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 0.01
+model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 1
+model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 1
 
 /*
  * Inserting data into the data store
@@ -211,6 +241,15 @@ InserterUtils.loadDelimitedData(inserter, dir+"authoragreement.csv",",");
 inserter = data.getInserter(disagreesAuth, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"authordisagreement.csv", ",");
 
+inserter = data.getInserter(sarcastic, observed_tr)
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"sarcasm.csv", ",");
+
+inserter = data.getInserter(nasty, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"nastiness.csv", ",");
+
+inserter = data.getInserter(attacks, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"attack.csv", ",");
+
 
 /*
  * Ground truth for training data for weight learning
@@ -229,10 +268,8 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"authorpro.csv", ",");
 inserter = data.getInserter(supports, dummy_tr)
 InserterUtils.loadDelimitedData(inserter, dir + "interaction.csv", ",")
 
-
 inserter = data.getInserter(against, dummy_tr2)
 InserterUtils.loadDelimitedData(inserter, dir + "interaction.csv", ",")
-
 
 /*
  * Testing split for model inference
@@ -262,8 +299,17 @@ InserterUtils.loadDelimitedData(inserter, testdir+"authoragreement.csv",",");
 inserter = data.getInserter(disagreesAuth, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"authordisagreement.csv", ",");
 
+inserter = data.getInserter(sarcastic, observed_te)
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"sarcasm.csv", ",");
+
+inserter = data.getInserter(nasty, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"nastiness.csv", ",");
+
+inserter = data.getInserter(attacks, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"attack.csv", ",");
+
 /*
- * Label partitions
+ * Random variable partitions
  */
 
 inserter = data.getInserter(isProPost, truth_te)
@@ -280,7 +326,7 @@ InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
 
 
 /*
- * Set up training databases for weight learning
+ * Set up training databases for weight learning using training set
  */
 
 Database distributionDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
@@ -364,7 +410,6 @@ System.out.println("Accuracy: " + stats.getAccuracy())
 System.out.println("F1: " + stats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("False Positive: " + stats.getFalsePositives())
 
 comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
 comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
@@ -376,7 +421,6 @@ System.out.println("Accuracy: " + authorstats.getAccuracy())
 System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("False Positive: " + authorstats.getFalsePositives())
 
 testTruthDB.close()
 testDB.close()
