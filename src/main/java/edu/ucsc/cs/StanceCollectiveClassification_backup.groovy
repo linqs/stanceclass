@@ -135,38 +135,48 @@ model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1
 
 /*
  * Propagating stance with the inferred network
+ * Add participates predicate as a clause
+ * second rule is actually propagating stance from B -> A
+ * encode an actual isAnti predicate
+ * small development dataset
  */
 
-model.add rule : (supports(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
-model.add rule : (supports(A1, A2, T) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
-model.add rule : (against(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
-model.add rule : (against(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
+model.add rule : (against(A1, A2, T) & (A1 - A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
+model.add rule : (against(A1, A2, T) & (A1 - A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
+
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & isProAuth(A2, T)) >> isProAuth(A1, T), weight : 1
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & ~(isProAuth(A2, T))) >> ~(isProAuth(A1, T)), weight : 1
+model.add rule : (against(A1, A2, T) & (A1 - A2) & isProAuth(A2, T)) >> ~(isProAuth(A1, T)), weight : 1
+model.add rule : (against(A1, A2, T) & (A1 - A2) & topic(T) & ~(isProAuth(A2, T))) >> isProAuth(A1, T), weight : 1
 
 /*
  * Cross-topic agreement and disagreement
  */
-model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
-model.add rule : (agreesAuth(A1, A2, T) & (A1^A2)) >> supports(A1, A2, T) , weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T) , weight : 1
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
 
 /*
  * Rules relating sarcasm to against
  */
-model.add rule : (sarcastic(A1, A2, P, T) & (A1^A2)) >> against(A1, A2, T) , weight : 1
-model.add rule : (sarcastic(A1, A2, P, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Rules relating nastiness to against
  */
-model.add rule : (nasty(A1, A2, T) & (A1^A2)) >> against(A1, A2, T) , weight : 1
-model.add rule : (nasty(A1, A2, P, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Rules relating attacks to against
  */
-model.add rule : (attacks(A1, A2, T) & (A1^A2)) >> against(A1, A2, T) , weight : 1
-model.add rule : (attacks(A1, A2, P, T) & (A1^A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 
 /*
@@ -183,18 +193,19 @@ model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^
  * Transitivity/triad rules for supports/against
  */
 
-model.add rule : (supports(A1, A2, T) & support(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
+/*
+model.add rule : (supports(A1, A2, T) & supports(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
 model.add rule : (supports(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
 
 model.add rule : (against(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
-model.add rule : (against(A1, A2, T) & support(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
+model.add rule : (against(A1, A2, T) & supports(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
 
 model.add rule : (supports(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
 model.add rule : (supports(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
 
 model.add rule : (against(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
 model.add rule : (against(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
-
+*/
 //Prior that the label given by the text classifier is indeed the stance label
 
 model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 1
@@ -329,7 +340,7 @@ InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
  * Set up training databases for weight learning using training set
  */
 
-Database distributionDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
+Database distributionDB = data.getDatabase(predict_tr, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
 Database dummy_DB = data.getDatabase(dummy_tr, [supports] as Set)
 Database dummy_DB2 = data.getDatabase(dummy_tr2, [against] as Set)
@@ -368,7 +379,7 @@ weightLearning.close();
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
+Database testDB = data.getDatabase(predict_te, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
 Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth] as Set)
 
 Database dummy_test = data.getDatabase(dummy_te, [supports] as Set)
