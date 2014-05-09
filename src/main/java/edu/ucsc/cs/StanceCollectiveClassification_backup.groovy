@@ -44,6 +44,7 @@ import edu.umd.cs.psl.model.parameters.PositiveWeight
 import edu.umd.cs.psl.model.parameters.Weight
 import edu.umd.cs.psl.ui.loading.*
 import edu.umd.cs.psl.util.database.Queries
+import edu.ucsc.cs.utils.Evaluator;
 
 
 //dataSet = "fourforums"
@@ -463,8 +464,15 @@ MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
 
+Evaluator evaluator = new Evaluator(testDB, testTruth_postPro, isProPost);
+evaluator.outputToFile();
+
+evaluator = new Evaluator(testDB, testTruth_postAnti, isAntiPost);
+evaluator.outputToFile();
+
 /* Evaluation */
 
+/*
 def comparator = new DiscretePredictionComparator(testDB)
 comparator.setBaseline(testTruth_postPro)
 comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
@@ -489,6 +497,7 @@ System.out.println("Accuracy: " + authorstats.getAccuracy())
 System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+*/
 
 testDB.close()
 distributionDB.close()
