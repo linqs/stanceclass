@@ -43,16 +43,17 @@ public class Evaluator {
 			
 			for (GroundAtom atom : Queries.getAllAtoms(result, p)){
 				GroundTerm[] terms = atom.getArguments();
-				writer.append(terms[0] + "," + terms[1] + "," + atom.getValue());
+				writer.append(terms[0] + "," + terms[1] + "," + atom.getValue() + "\n");
+                                writer.flush();
 			}
 			
 			writer = new BufferedWriter(new FileWriter(groundTruthFile));
 			
 			for (GroundAtom atom : Queries.getAllAtoms(baseline, p)){
 				GroundTerm[] terms = atom.getArguments();
-				writer.append(terms[0] + "," + terms[1] + "," + atom.getValue());
+				writer.append(terms[0] + "," + terms[1] + "," + atom.getValue() + "\n");
+                                writer.flush();
 			}
-			
 			writer.close();
 
 		} catch (Exception e) {
