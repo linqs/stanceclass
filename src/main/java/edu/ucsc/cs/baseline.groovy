@@ -108,125 +108,9 @@ model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.St
 model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 
-//model.add predicate: "agreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
-//model.add predicate: "disagreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
-
-
-/*
- * Rule expressing that an author and their post will have the same stances and same agreement behavior 
- * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
- */
-
-model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 1
-model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight : 1
-
-
-model.add rule : (isAntiPost(P, T) & writesPost(A, P)) >> isAntiAuth(A, T), weight : 1
-model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAntiPost(P, T), weight : 1
-
-/*
- * Rules for relating stance with agreement/disagreement
- */
-
-/*
-model.add rule : (agreesPost(P1, P2) & (P1^P2) & isProPost(P1, T)) >> isProPost(P2, T), weight : 1
-model.add rule : (agreesPost(P1, P2) & (P1^P2) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight : 1
-model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & isProPost(P1, T)) >> ~(isProPost(P2, T)), weight : 1
-model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(isProPost(P1, T))) >> isProPost(P2, T), weight : 1
-*/
-/*
-model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
-model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
-*/
-
-/*
- * Propagating stance with the inferred network
- * Add participates predicate as a clause
- * second rule is actually propagating stance from B -> A
- * encode an actual isAnti predicate
- * small development dataset
- */
-
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
-
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : 1
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : 1
-
-
-model.add rule : (against(A1, A2, T) & (A1 - A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
-model.add rule : (against(A1, A2, T) & (A1 - A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
-
-model.add rule : (against(A1, A2, T) & (A1 - A2) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : 1
-model.add rule : (against(A1, A2, T) & (A1 - A2) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : 1
-
-/*
- * agreement and disagreement to against and supports
- */
-//model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
-//model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
-
-model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T) , weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
-
-/*
- * Rules relating sarcasm to against
- */
-model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
-//model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
-
-/*
- * Rules relating nastiness to against
- */
-model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
-//model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
-
-/*
- * Rules relating attacks to against
- */
-model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
-//model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
-
-/*
- * Cross topic supports and against
- */
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
-
-
-/*
- * Rules for propagating disagreement/agreement through the network
- * Doesn't do anything since agreement predicates are closed
- 
-model.add rule : (agreesAuth(P1, P2) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 5
-model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 5
-model.add rule : (agreesAuth(P1, P2) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 5
-model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 5
-*/
-
-/*
- * Transitivity/triad rules for supports/against
- */
-
-/*
-model.add rule : (supports(A1, A2, T) & supports(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
-model.add rule : (supports(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
-
-model.add rule : (against(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
-model.add rule : (against(A1, A2, T) & supports(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
-
-model.add rule : (supports(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
-model.add rule : (supports(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
-
-model.add rule : (against(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
-model.add rule : (against(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
-*/
-//Prior that the label given by the text classifier is indeed the stance label
 
 model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 1
-model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 1
+model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : 1
 
 /*
  * Inserting data into the data store
@@ -436,22 +320,6 @@ dbPop = new DatabasePopulator(distributionDB);
 dbPop.populateFromDB(dummy_DB, supports);
 
 dbPop.populateFromDB(dummy_DB2, against);
-
-
-//MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, distributionDB, truthDB, cb);
-HardEM weightLearning = new HardEM(model, distributionDB, truthDB, cb);
-println "about to start weight learning"
-weightLearning.learn();
-println " finished weight learning "
-weightLearning.close();
-
-/*
- MaxPseudoLikelihood mple = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
- println "about to start weight learning"
- mple.learn();
- println " finished weight learning "
- mlpe.close();
- */
 
 println model;
 
