@@ -109,8 +109,8 @@ model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.S
 
 
 
-model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 1
-model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : 1
+model.add rule : (hasLabelPro(P, T) ) >> isProPost(P, T) , weight : 1
+model.add rule : (hasLabelAnti(P, T) ) >> isAntiPost(P, T) , weight : 1
 
 /*
  * Inserting data into the data store
@@ -272,6 +272,7 @@ InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
 inserter = data.getInserter(against, dummy_te2)
 InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
 
+
 /*to populate testDB with the correct rvs */
 inserter = data.getInserter(isProAuth, dummy_te)
 InserterUtils.loadDelimitedData(inserter, testdir + "participates.csv", ",")
@@ -329,17 +330,11 @@ Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth, isAntiA
 Database dummy_test = data.getDatabase(dummy_te, [supports, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
 Database dummy_test2 = data.getDatabase(dummy_te2, [against] as Set)
 
-/* Populate isProPost in test DB. */
-
-DatabasePopulator test_pop = new DatabasePopulator(testDB);
-test_pop.populateFromDB(testTruthDB, isProPost);
-
-
-/* Populate isProAuth in test DB. */
+/* Populate in testDB */
 
 DatabasePopulator test_populator = new DatabasePopulator(testDB);
 test_populator.populateFromDB(dummy_test, isProAuth);
-test_populator.populateFromDB(dummy_test, isProAuth);
+test_populator.populateFromDB(dummy_test, isProPost);
 
 test_populator.populateFromDB(dummy_test, isAntiPost);
 test_populator.populateFromDB(dummy_test, isAntiAuth);

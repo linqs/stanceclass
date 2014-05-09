@@ -117,29 +117,16 @@ model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.S
  * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
  */
 
-model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 1
+model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 30.27
 model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight : 1
 
 
-model.add rule : (isAntiPost(P, T) & writesPost(A, P)) >> isAntiAuth(A, T), weight : 1
+model.add rule : (isAntiPost(P, T) & writesPost(A, P)) >> isAntiAuth(A, T), weight : 10.5
 model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAntiPost(P, T), weight : 1
 
 /*
  * Rules for relating stance with agreement/disagreement
  */
-
-/*
-model.add rule : (agreesPost(P1, P2) & (P1^P2) & isProPost(P1, T)) >> isProPost(P2, T), weight : 1
-model.add rule : (agreesPost(P1, P2) & (P1^P2) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight : 1
-model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & isProPost(P1, T)) >> ~(isProPost(P2, T)), weight : 1
-model.add rule : (~(agreesPost(P1, P2)) & (P1^P2) & ~(isProPost(P1, T))) >> isProPost(P2, T), weight : 1
-*/
-/*
-model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
-model.add rule : (agreesAuth(A1, A2, T) & (A1^A2) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
-*/
 
 /*
  * Propagating stance with the inferred network
@@ -149,18 +136,18 @@ model.add rule : (disagreesAuth(A1, A2, T) & (A1^A2) & topic(T) & ~(isProAuth(A1
  * small development dataset
  */
 
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 1
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 1
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 0.5
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 0.5
 
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : 1
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : 1
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : 0.84
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : 0.87
 
 
-model.add rule : (against(A1, A2, T) & (A1 - A2) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 1
-model.add rule : (against(A1, A2, T) & (A1 - A2) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 1
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 17.3
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 2.97
 
-model.add rule : (against(A1, A2, T) & (A1 - A2) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : 1
-model.add rule : (against(A1, A2, T) & (A1 - A2) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : 1
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : 2.96
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : 5.58
 
 /*
  * agreement and disagreement to against and supports
@@ -168,32 +155,32 @@ model.add rule : (against(A1, A2, T) & (A1 - A2) & topic(T) & ~(isAntiAuth(A1, T
 //model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
 //model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
-model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T) , weight : 1
-model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T) , weight : 0.05
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 8.2
 
 /*
  * Rules relating sarcasm to against
  */
-model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 3.2
 //model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Rules relating nastiness to against
  */
-model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1.3
 //model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Rules relating attacks to against
  */
-model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1
+model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 2.0
 //model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Cross topic supports and against
  */
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 0.85
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1.3
 
 
 /*
@@ -225,8 +212,8 @@ model.add rule : (against(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3
 */
 //Prior that the label given by the text classifier is indeed the stance label
 
-model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 1
-model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 1
+model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 69.7
+model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : 3.05
 
 /*
  * Inserting data into the data store
@@ -235,16 +222,23 @@ model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 1
 
 //foldStr = "fold" + String.valueOf(fold) + java.io.File.separator;
 
+/* training partitions */
 Partition observed_tr = new Partition(0);
 Partition predict_tr = new Partition(1);
 Partition truth_tr = new Partition(2);
-Partition observed_te = new Partition(3);
-Partition predict_te = new Partition(4);
-Partition truth_te = new Partition(5);
-Partition dummy_tr = new Partition(6);
-Partition dummy_tr2 = new Partition(7);
-Partition dummy_te = new Partition(8);
-Partition dummy_te2 = new Partition(9);
+Partition dummy_tr = new Partition(3);
+
+/*testing partitions */
+Partition observed_te = new Partition(4);
+Partition predict_te = new Partition(5);
+Partition dummy_te = new Partition(6);
+
+/*separate partitions for the gold standard truth for testing */
+Partition postProTruth = new Partition(7);
+Partition postAntiTruth = new Partition(8);
+Partition authProTruth = new Partition(9);
+Partition authAntiTruth = new Partition(10);
+
 
 //def dir = 'data'+java.io.File.separator+ foldStr + 'train'+java.io.File.separator;
 def dir = 'data'+java.io.File.separator+ 'stance-dev'+java.io.File.separator + 'train'+java.io.File.separator;
@@ -306,10 +300,10 @@ InserterUtils.loadDelimitedData(inserter, dir+"authoranti.csv", ",");
 inserter = data.getInserter(supports, dummy_tr)
 InserterUtils.loadDelimitedData(inserter, dir + "interaction.csv", ",")
 
-inserter = data.getInserter(against, dummy_tr2)
+inserter = data.getInserter(against, dummy_tr)
 InserterUtils.loadDelimitedData(inserter, dir + "interaction.csv", ",")
 
-/*db population */
+/*db population for all possible stance atoms*/
 
 inserter = data.getInserter(isProAuth, dummy_tr)
 InserterUtils.loadDelimitedData(inserter, dir + "participates.csv", ",")
@@ -334,7 +328,7 @@ def testdir = 'data'+java.io.File.separator+ 'stance-dev' +java.io.File.separato
 inserter = data.getInserter(hasLabelPro, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"prolabels.csv", ",");
 
-inserter = data.getInserter(hasLabelPro, observed_te)
+inserter = data.getInserter(hasLabelAnti, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"antilabels.csv", ",");
 
 inserter = data.getInserter(hasTopic, observed_te)
@@ -368,16 +362,16 @@ InserterUtils.loadDelimitedData(inserter, testdir+"attack.csv", ",");
  * Random variable partitions
  */
 
-inserter = data.getInserter(isProPost, truth_te)
+inserter = data.getInserter(isProPost, postProTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"post_pro.csv",",");
 
-inserter = data.getInserter(isProAuth, truth_te)
+inserter = data.getInserter(isProAuth, authProTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"authorpro.csv", ",");
 
-inserter = data.getInserter(isAntiPost, truth_te)
+inserter = data.getInserter(isAntiPost, postAntiTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"post_anti.csv",",");
 
-inserter = data.getInserter(isAntiAuth, truth_te)
+inserter = data.getInserter(isAntiAuth, authAntiTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"authoranti.csv", ",");
 
 /*supports and against*/
@@ -385,7 +379,7 @@ InserterUtils.loadDelimitedData(inserter, testdir+"authoranti.csv", ",");
 inserter = data.getInserter(supports, dummy_te)
 InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
 
-inserter = data.getInserter(against, dummy_te2)
+inserter = data.getInserter(against, dummy_te)
 InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
 
 /*to populate testDB with the correct rvs */
@@ -406,45 +400,30 @@ InserterUtils.loadDelimitedData(inserter, testdir + "post_topics.csv", ",")
  * Set up training databases for weight learning using training set
  */
 
-Database distributionDB = data.getDatabase(predict_tr, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
+Database distributionDB = data.getDatabase(predict_tr, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasLabelAnti, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth, isAntiAuth, isAntiPost] as Set)
-Database dummy_DB = data.getDatabase(dummy_tr, [supports, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
-Database dummy_DB2 = data.getDatabase(dummy_tr2, [against] as Set)
+Database dummy_DB = data.getDatabase(dummy_tr, [supports, against, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
 
-/* Populate isProPost in observed DB. */
+/* Populate distribution DB. */
 DatabasePopulator dbPop = new DatabasePopulator(distributionDB);
 dbPop.populateFromDB(dummy_DB, isProPost);
-
-
-/* Populate isProAuth in observed DB. */
-//dbPop.populateFromDB(truthDB, isProAuth);
-
-/* Populate isAntiPost in observed DB. */
 dbPop.populateFromDB(dummy_DB, isAntiPost);
-
-
-/* Populate isAntiAuth in observed DB. */
-//dbPop.populateFromDB(truthDB, isAntiAuth);
-
 dbPop.populateFromDB(dummy_DB, isProAuth);
 dbPop.populateFromDB(dummy_DB, isAntiAuth);
 
 /*
  * Populate distribution DB with all possible interactions
  */
-dbPop = new DatabasePopulator(distributionDB);
 dbPop.populateFromDB(dummy_DB, supports);
+dbPop.populateFromDB(dummy_DB, against);
 
-dbPop.populateFromDB(dummy_DB2, against);
-
-
-//MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, distributionDB, truthDB, cb);
+/*
 HardEM weightLearning = new HardEM(model, distributionDB, truthDB, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "
 weightLearning.close();
-
+*/
 /*
  MaxPseudoLikelihood mple = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
  println "about to start weight learning"
@@ -455,29 +434,26 @@ weightLearning.close();
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
-Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth, isAntiAuth, isAntiPost] as Set)
+Database testDB = data.getDatabase(predict_te, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasLabelAnti, hasTopic, writesPost, topic] as Set, observed_te);
 
-Database dummy_test = data.getDatabase(dummy_te, [supports, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
-Database dummy_test2 = data.getDatabase(dummy_te2, [against] as Set)
+Database testTruth_postPro = data.getDatabase(postProTruth, [isProPost] as Set)
+Database testTruth_postAnti = data.getDatabase(postAntiTruth, [isAntiPost] as Set)
+Database testTruth_authPro = data.getDatabase(authProTruth, [isProAuth] as Set)
+Database testTruth_authAnti = data.getDatabase(authAntiTruth, [isAntiAuth] as Set)
 
-/* Populate isProPost in test DB. */
+Database dummy_test = data.getDatabase(dummy_te, [supports, against, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
 
-DatabasePopulator test_pop = new DatabasePopulator(testDB);
-test_pop.populateFromDB(testTruthDB, isProPost);
-
-
-/* Populate isProAuth in test DB. */
+/* Populate in test DB. */
 
 DatabasePopulator test_populator = new DatabasePopulator(testDB);
 test_populator.populateFromDB(dummy_test, isProAuth);
-test_populator.populateFromDB(dummy_test, isProAuth);
+test_populator.populateFromDB(dummy_test, isProPost);
 
 test_populator.populateFromDB(dummy_test, isAntiPost);
 test_populator.populateFromDB(dummy_test, isAntiAuth);
 
 test_populator.populateFromDB(dummy_test, supports);
-test_populator.populateFromDB(dummy_test2, against);
+test_populator.populateFromDB(dummy_test, against);
 
 /*
  * Inference
@@ -490,11 +466,11 @@ System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
 /* Evaluation */
 
 def comparator = new DiscretePredictionComparator(testDB)
-comparator.setBaseline(testTruthDB)
+comparator.setBaseline(testTruth_postPro)
 comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
 comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
 
-Set<GroundAtom> groundings = Queries.getAllAtoms(testTruthDB, isProPost)
+Set<GroundAtom> groundings = Queries.getAllAtoms(testTruth_postPro, isProPost)
 int totalTestExamples = groundings.size()
 DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
 System.out.println("Accuracy: " + stats.getAccuracy())
@@ -502,18 +478,24 @@ System.out.println("F1: " + stats.getF1(DiscretePredictionStatistics.BinaryClass
 System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 
-comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
+comparator.setBaseline(testTruth_postAnti)
+comparator.setResultFilter(new MaxValueFilter(isAntiPost, 1))
 comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
 
-Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruthDB, isProAuth)
+Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruth_postAnti, isAntiPost)
 totalTestExamples = authorGroundings.size()
-DiscretePredictionStatistics authorstats = comparator.compare(isProAuth, totalTestExamples)
+DiscretePredictionStatistics authorstats = comparator.compare(isAntiPost, totalTestExamples)
 System.out.println("Accuracy: " + authorstats.getAccuracy())
 System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 
-testTruthDB.close()
 testDB.close()
 distributionDB.close()
 truthDB.close()
+dummy_test.close()
+dummy_DB.close()
+testTruth_postPro.close()
+testTruth_postAnti.close()
+testTruth_authPro.close()
+testTruth_authAnti.close()
