@@ -44,6 +44,8 @@ import edu.umd.cs.psl.model.parameters.PositiveWeight
 import edu.umd.cs.psl.model.parameters.Weight
 import edu.umd.cs.psl.ui.loading.*
 import edu.umd.cs.psl.util.database.Queries
+import edu.ucsc.cs.utils.Evaluator;
+
 
 
 //dataSet = "fourforums"
@@ -119,16 +121,23 @@ model.add rule : (hasLabelAnti(P, T) ) >> isAntiPost(P, T) , weight : 1
 
 //foldStr = "fold" + String.valueOf(fold) + java.io.File.separator;
 
+/* training partitions */
 Partition observed_tr = new Partition(0);
 Partition predict_tr = new Partition(1);
 Partition truth_tr = new Partition(2);
-Partition observed_te = new Partition(3);
-Partition predict_te = new Partition(4);
-Partition truth_te = new Partition(5);
-Partition dummy_tr = new Partition(6);
-Partition dummy_tr2 = new Partition(7);
-Partition dummy_te = new Partition(8);
-Partition dummy_te2 = new Partition(9);
+Partition dummy_tr = new Partition(3);
+
+/*testing partitions */
+Partition observed_te = new Partition(4);
+Partition predict_te = new Partition(5);
+Partition dummy_te = new Partition(6);
+
+/*separate partitions for the gold standard truth for testing */
+Partition postProTruth = new Partition(7);
+Partition postAntiTruth = new Partition(8);
+Partition authProTruth = new Partition(9);
+Partition authAntiTruth = new Partition(10);
+
 
 //def dir = 'data'+java.io.File.separator+ foldStr + 'train'+java.io.File.separator;
 def dir = 'data'+java.io.File.separator+ 'stance-dev'+java.io.File.separator + 'train'+java.io.File.separator;
@@ -190,10 +199,10 @@ InserterUtils.loadDelimitedData(inserter, dir+"authoranti.csv", ",");
 inserter = data.getInserter(supports, dummy_tr)
 InserterUtils.loadDelimitedData(inserter, dir + "interaction.csv", ",")
 
-inserter = data.getInserter(against, dummy_tr2)
+inserter = data.getInserter(against, dummy_tr)
 InserterUtils.loadDelimitedData(inserter, dir + "interaction.csv", ",")
 
-/*db population */
+/*db population for all possible stance atoms*/
 
 inserter = data.getInserter(isProAuth, dummy_tr)
 InserterUtils.loadDelimitedData(inserter, dir + "participates.csv", ",")
@@ -218,7 +227,7 @@ def testdir = 'data'+java.io.File.separator+ 'stance-dev' +java.io.File.separato
 inserter = data.getInserter(hasLabelPro, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"prolabels.csv", ",");
 
-inserter = data.getInserter(hasLabelPro, observed_te)
+inserter = data.getInserter(hasLabelAnti, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"antilabels.csv", ",");
 
 inserter = data.getInserter(hasTopic, observed_te)
@@ -252,16 +261,16 @@ InserterUtils.loadDelimitedData(inserter, testdir+"attack.csv", ",");
  * Random variable partitions
  */
 
-inserter = data.getInserter(isProPost, truth_te)
+inserter = data.getInserter(isProPost, postProTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"post_pro.csv",",");
 
-inserter = data.getInserter(isProAuth, truth_te)
+inserter = data.getInserter(isProAuth, authProTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"authorpro.csv", ",");
 
-inserter = data.getInserter(isAntiPost, truth_te)
+inserter = data.getInserter(isAntiPost, postAntiTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"post_anti.csv",",");
 
-inserter = data.getInserter(isAntiAuth, truth_te)
+inserter = data.getInserter(isAntiAuth, authAntiTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"authoranti.csv", ",");
 
 /*supports and against*/
@@ -269,9 +278,8 @@ InserterUtils.loadDelimitedData(inserter, testdir+"authoranti.csv", ",");
 inserter = data.getInserter(supports, dummy_te)
 InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
 
-inserter = data.getInserter(against, dummy_te2)
+inserter = data.getInserter(against, dummy_te)
 InserterUtils.loadDelimitedData(inserter, testdir + "interaction.csv", ",")
-
 
 /*to populate testDB with the correct rvs */
 inserter = data.getInserter(isProAuth, dummy_te)
@@ -291,46 +299,50 @@ InserterUtils.loadDelimitedData(inserter, testdir + "post_topics.csv", ",")
  * Set up training databases for weight learning using training set
  */
 
-Database distributionDB = data.getDatabase(predict_tr, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_tr);
+Database distributionDB = data.getDatabase(predict_tr, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasLabelAnti, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth, isAntiAuth, isAntiPost] as Set)
-Database dummy_DB = data.getDatabase(dummy_tr, [supports, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
-Database dummy_DB2 = data.getDatabase(dummy_tr2, [against] as Set)
+Database dummy_DB = data.getDatabase(dummy_tr, [supports, against, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
 
-/* Populate isProPost in observed DB. */
+/* Populate distribution DB. */
 DatabasePopulator dbPop = new DatabasePopulator(distributionDB);
 dbPop.populateFromDB(dummy_DB, isProPost);
-
-
-/* Populate isProAuth in observed DB. */
-//dbPop.populateFromDB(truthDB, isProAuth);
-
-/* Populate isAntiPost in observed DB. */
 dbPop.populateFromDB(dummy_DB, isAntiPost);
-
-
-/* Populate isAntiAuth in observed DB. */
-//dbPop.populateFromDB(truthDB, isAntiAuth);
-
 dbPop.populateFromDB(dummy_DB, isProAuth);
 dbPop.populateFromDB(dummy_DB, isAntiAuth);
 
 /*
  * Populate distribution DB with all possible interactions
  */
-dbPop = new DatabasePopulator(distributionDB);
 dbPop.populateFromDB(dummy_DB, supports);
+dbPop.populateFromDB(dummy_DB, against);
 
-dbPop.populateFromDB(dummy_DB2, against);
+/*
+HardEM weightLearning = new HardEM(model, distributionDB, truthDB, cb);
+println "about to start weight learning"
+weightLearning.learn();
+println " finished weight learning "
+weightLearning.close();
+*/
+/*
+ MaxPseudoLikelihood mple = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
+ println "about to start weight learning"
+ mple.learn();
+ println " finished weight learning "
+ mlpe.close();
+ */
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
-Database testTruthDB = data.getDatabase(truth_te, [isProPost, isProAuth, isAntiAuth, isAntiPost] as Set)
+Database testDB = data.getDatabase(predict_te, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasLabelAnti, hasTopic, writesPost, topic] as Set, observed_te);
 
-Database dummy_test = data.getDatabase(dummy_te, [supports, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
-Database dummy_test2 = data.getDatabase(dummy_te2, [against] as Set)
+Database testTruth_postPro = data.getDatabase(postProTruth, [isProPost] as Set)
+Database testTruth_postAnti = data.getDatabase(postAntiTruth, [isAntiPost] as Set)
+Database testTruth_authPro = data.getDatabase(authProTruth, [isProAuth] as Set)
+Database testTruth_authAnti = data.getDatabase(authAntiTruth, [isAntiAuth] as Set)
 
-/* Populate in testDB */
+Database dummy_test = data.getDatabase(dummy_te, [supports, against, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
+
+/* Populate in test DB. */
 
 DatabasePopulator test_populator = new DatabasePopulator(testDB);
 test_populator.populateFromDB(dummy_test, isProAuth);
@@ -340,7 +352,7 @@ test_populator.populateFromDB(dummy_test, isAntiPost);
 test_populator.populateFromDB(dummy_test, isAntiAuth);
 
 test_populator.populateFromDB(dummy_test, supports);
-test_populator.populateFromDB(dummy_test2, against);
+test_populator.populateFromDB(dummy_test, against);
 
 /*
  * Inference
@@ -350,14 +362,21 @@ MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
 
+Evaluator evaluator = new Evaluator(testDB, testTruth_postPro, isProPost);
+evaluator.outputToFile();
+
+evaluator = new Evaluator(testDB, testTruth_postAnti, isAntiPost);
+evaluator.outputToFile();
+
 /* Evaluation */
 
+/*
 def comparator = new DiscretePredictionComparator(testDB)
-comparator.setBaseline(testTruthDB)
+comparator.setBaseline(testTruth_postPro)
 comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
 comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
 
-Set<GroundAtom> groundings = Queries.getAllAtoms(testTruthDB, isProPost)
+Set<GroundAtom> groundings = Queries.getAllAtoms(testTruth_postPro, isProPost)
 int totalTestExamples = groundings.size()
 DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
 System.out.println("Accuracy: " + stats.getAccuracy())
@@ -365,18 +384,25 @@ System.out.println("F1: " + stats.getF1(DiscretePredictionStatistics.BinaryClass
 System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 
-comparator.setResultFilter(new MaxValueFilter(isProAuth, 1))
+comparator.setBaseline(testTruth_postAnti)
+comparator.setResultFilter(new MaxValueFilter(isAntiPost, 1))
 comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
 
-Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruthDB, isProAuth)
+Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruth_postAnti, isAntiPost)
 totalTestExamples = authorGroundings.size()
-DiscretePredictionStatistics authorstats = comparator.compare(isProAuth, totalTestExamples)
+DiscretePredictionStatistics authorstats = comparator.compare(isAntiPost, totalTestExamples)
 System.out.println("Accuracy: " + authorstats.getAccuracy())
 System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
 System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
+*/
 
-testTruthDB.close()
 testDB.close()
 distributionDB.close()
 truthDB.close()
+dummy_test.close()
+dummy_DB.close()
+testTruth_postPro.close()
+testTruth_postAnti.close()
+testTruth_authPro.close()
+testTruth_authAnti.close()
