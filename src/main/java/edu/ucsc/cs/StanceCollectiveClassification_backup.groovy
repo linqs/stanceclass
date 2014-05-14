@@ -30,6 +30,10 @@ import edu.umd.cs.psl.evaluation.result.*
 import edu.umd.cs.psl.evaluation.statistics.DiscretePredictionComparator
 import edu.umd.cs.psl.evaluation.statistics.DiscretePredictionStatistics
 import edu.umd.cs.psl.evaluation.statistics.filter.MaxValueFilter
+
+import edu.umd.cs.psl.evaluation.statistics.RankingScore
+import edu.umd.cs.psl.evaluation.statistics.SimpleRankingComparator
+
 import edu.umd.cs.psl.groovy.*
 import edu.umd.cs.psl.model.Model
 import edu.umd.cs.psl.model.argument.ArgumentType
@@ -56,6 +60,8 @@ def defaultPath = System.getProperty("java.io.tmpdir")
 //String dbPath = cb.getString("dbPath", defaultPath + File.separator + "psl-" + dataSet)
 String dbPath = cb.getString("dbPath", defaultPath + File.separator + dataSet)
 DataStore data = new RDBMSDataStore(new H2DatabaseDriver(Type.Disk, dbPath, true), cb)
+
+initialWeight = 1
 
 PSLModel model = new PSLModel(this, data)
 
@@ -118,12 +124,12 @@ model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.S
  * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
  */
 
-model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : 30.27
-model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight : 1
+model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : initialWeight
+model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight :initialWeight
 
 
-model.add rule : (isAntiPost(P, T) & writesPost(A, P)) >> isAntiAuth(A, T), weight : 10.5
-model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAntiPost(P, T), weight : 1
+model.add rule : (isAntiPost(P, T) & writesPost(A, P)) >> isAntiAuth(A, T), weight : initialWeight
+model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAntiPost(P, T), weight : initialWeight
 
 /*
  * Rules for relating stance with agreement/disagreement
@@ -137,18 +143,18 @@ model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAnt
  * small development dataset
  */
 
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : 0.5
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : 0.5
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
 
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : 0.84
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : 0.87
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : initialWeight
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : initialWeight
 
 
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : 17.3
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : 2.97
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
 
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : 2.96
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : 5.58
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
 
 /*
  * agreement and disagreement to against and supports
@@ -156,32 +162,32 @@ model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T
 //model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
 //model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
-model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T) , weight : 0.05
-model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 8.2
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T) , weight : initialWeight
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
 
 /*
  * Rules relating sarcasm to against
  */
-model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 3.2
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
 //model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Rules relating nastiness to against
  */
-model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 1.3
+model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
 //model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Rules relating attacks to against
  */
-model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : 2.0
+model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
 //model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
 
 /*
  * Cross topic supports and against
  */
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 0.85
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1.3
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : initialWeight
+model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : initialWeight
 
 
 /*
@@ -213,8 +219,10 @@ model.add rule : (against(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3
 */
 //Prior that the label given by the text classifier is indeed the stance label
 
-model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 69.7
-model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : 3.05
+model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : initialWeight
+model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : initialWeight
+
+model.add rule : isProPost(P, T) >> ~isAntiPost(P, T) , constraint: true
 
 /*
  * Inserting data into the data store
@@ -418,13 +426,13 @@ dbPop.populateFromDB(dummy_DB, isAntiAuth);
 dbPop.populateFromDB(dummy_DB, supports);
 dbPop.populateFromDB(dummy_DB, against);
 
-/*
+
 HardEM weightLearning = new HardEM(model, distributionDB, truthDB, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "
 weightLearning.close();
-*/
+
 /*
  MaxPseudoLikelihood mple = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
  println "about to start weight learning"
@@ -464,11 +472,35 @@ MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
 
+/*
 Evaluator evaluator = new Evaluator(testDB, testTruth_postPro, isProPost);
 evaluator.outputToFile();
 
 evaluator = new Evaluator(testDB, testTruth_postAnti, isAntiPost);
 evaluator.outputToFile();
+*/
+
+def comparator = new SimpleRankingComparator(testDB)
+comparator.setBaseline(testTruth_postPro)
+
+// Choosing what metrics to report
+def metrics = [RankingScore.AUPRC, RankingScore.NegAUPRC,  RankingScore.AreaROC]
+double [] score = new double[metrics.size()]
+
+try {
+    for (int i = 0; i < metrics.size(); i++) {
+            comparator.setRankingScore(metrics.get(i))
+            score[i] = comparator.compare(isProPost)
+    }
+    //Storing the performance values of the current fold
+
+    System.out.println("\nArea under positive-class PR curve: " + score[0])
+    System.out.println("Area under negetive-class PR curve: " + score[1])
+    System.out.println("Area under ROC curve: " + score[2])
+}
+catch (ArrayIndexOutOfBoundsException e) {
+    System.out.println("No evaluation data! Terminating!");
+}
 
 /* Evaluation */
 

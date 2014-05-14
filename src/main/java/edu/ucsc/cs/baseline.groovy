@@ -46,6 +46,9 @@ import edu.umd.cs.psl.ui.loading.*
 import edu.umd.cs.psl.util.database.Queries
 import edu.ucsc.cs.utils.Evaluator;
 
+import edu.umd.cs.psl.evaluation.statistics.RankingScore
+import edu.umd.cs.psl.evaluation.statistics.SimpleRankingComparator
+
 
 
 //dataSet = "fourforums"
@@ -113,6 +116,8 @@ model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.S
 
 model.add rule : (hasLabelPro(P, T) ) >> isProPost(P, T) , weight : 1
 model.add rule : (hasLabelAnti(P, T) ) >> isAntiPost(P, T) , weight : 1
+
+model.add rule : isProPost(P, T) >> ~isAntiPost(P, T) , constraint: true
 
 /*
  * Inserting data into the data store
@@ -362,11 +367,55 @@ MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
 
+/*
 Evaluator evaluator = new Evaluator(testDB, testTruth_postPro, isProPost);
 evaluator.outputToFile();
 
 evaluator = new Evaluator(testDB, testTruth_postAnti, isAntiPost);
 evaluator.outputToFile();
+*/
+
+def comparator = new SimpleRankingComparator(testDB)
+comparator.setBaseline(testTruth_postPro)
+
+// Choosing what metrics to report
+def metrics = [RankingScore.AUPRC, RankingScore.NegAUPRC,  RankingScore.AreaROC]
+double [] score = new double[metrics.size()]
+
+try {
+    for (int i = 0; i < metrics.size(); i++) {
+            comparator.setRankingScore(metrics.get(i))
+            score[i] = comparator.compare(isProPost)
+    }
+    //Storing the performance values of the current fold
+
+    System.out.println("\nArea under positive-class PR curve for isProPost: " + score[0])
+    System.out.println("Area under negetive-class PR curve for isProPost: " + score[1])
+    System.out.println("Area under ROC curve for isProPost: " + score[2])
+}
+catch (ArrayIndexOutOfBoundsException e) {
+    System.out.println("No evaluation data! Terminating!");
+}
+
+comparator.setBaseline(testTruth_postAnti)
+
+// Choosing what metrics to report
+score = new double[metrics.size()]
+
+try {
+    for (int i = 0; i < metrics.size(); i++) {
+            comparator.setRankingScore(metrics.get(i))
+            score[i] = comparator.compare(isAntiPost)
+    }
+    //Storing the performance values of the current fold
+
+    System.out.println("\nArea under positive-class PR curve for isAntiPost: " + score[0])
+    System.out.println("Area under negetive-class PR curve for isAntiPost: " + score[1])
+    System.out.println("Area under ROC curve for isAntiPost: " + score[2])
+}
+catch (ArrayIndexOutOfBoundsException e) {
+    System.out.println("No evaluation data! Terminating!");
+}
 
 /* Evaluation */
 
