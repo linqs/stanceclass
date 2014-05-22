@@ -132,8 +132,35 @@ model.add rule : (isAntiPost(P, T) & writesPost(A, P)) >> isAntiAuth(A, T), weig
 model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAntiPost(P, T), weight : initialWeight
 
 /*
- * Rules for relating stance with agreement/disagreement
+ * Rules for relating stance with agreement/disagreement.sarcasm/nastiness/attack observed predicates
  */
+
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : initialWeight
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
+
+model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
+
+model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
+
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
+
+
 
 /*
  * Propagating stance with the inferred network
@@ -145,60 +172,48 @@ model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAnt
 
 model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
 model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
-
 model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : initialWeight
 model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : initialWeight
 
 
 model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
 model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
-
 model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
 model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
 
 /*
  * agreement and disagreement to against and supports
  */
-//model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : 1
-//model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : initialWeight
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : initialWeight
 
-model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T) , weight : initialWeight
-model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
+//model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T)
+//model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T)
 
 /*
  * Rules relating sarcasm to against
  */
-model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
-//model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+//model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : initialWeight
 
 /*
  * Rules relating nastiness to against
  */
-model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
-//model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+//model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
+model.add rule : (nasty(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : initialWeight
 
 /*
  * Rules relating attacks to against
  */
-model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
-//model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : 1
+//model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
+model.add rule : (attacks(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : initialWeight
 
 /*
  * Cross topic supports and against
  */
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : initialWeight
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : initialWeight
+//model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : initialWeight
+//model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : initialWeight
 
-
-/*
- * Rules for propagating disagreement/agreement through the network
- * Doesn't do anything since agreement predicates are closed
- 
-model.add rule : (agreesAuth(P1, P2) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 5
-model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & agreesAuth(P2, P3) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 5
-model.add rule : (agreesAuth(P1, P2) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> ~(agreesAuth(P1, P3)), weight : 5
-model.add rule : (~(agreesAuth(P1, P2)) & (P1^P2) & ~(agreesAuth(P2, P3)) & (P2^P3) & (P1^P3)) >> agreesAuth(P1, P3), weight : 5
-*/
 
 /*
  * Transitivity/triad rules for supports/against
@@ -222,7 +237,8 @@ model.add rule : (against(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3
 model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : initialWeight
 model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : initialWeight
 
-model.add rule : isProPost(P, T) >> ~isAntiPost(P, T) , constraint: true
+model.add rule : (isProPost(P, T)) >> ~isAntiPost(P, T) , constraint: true
+model.add rule: (~(isAntiPost(P, T)) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
 
 /*
  * Inserting data into the data store
@@ -497,6 +513,26 @@ try {
     System.out.println("\nArea under positive-class PR curve: " + score[0])
     System.out.println("Area under negetive-class PR curve: " + score[1])
     System.out.println("Area under ROC curve: " + score[2])
+}
+catch (ArrayIndexOutOfBoundsException e) {
+    System.out.println("No evaluation data! Terminating!");
+}
+
+comparator.setBaseline(testTruth_postAnti)
+
+// Choosing what metrics to report
+score = new double[metrics.size()]
+
+try {
+    for (int i = 0; i < metrics.size(); i++) {
+            comparator.setRankingScore(metrics.get(i))
+            score[i] = comparator.compare(isAntiPost)
+    }
+    //Storing the performance values of the current fold
+
+    System.out.println("\nArea under positive-class PR curve for isAntiPost: " + score[0])
+    System.out.println("Area under negetive-class PR curve for isAntiPost: " + score[1])
+    System.out.println("Area under ROC curve for isAntiPost: " + score[2])
 }
 catch (ArrayIndexOutOfBoundsException e) {
     System.out.println("No evaluation data! Terminating!");

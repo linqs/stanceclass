@@ -30,6 +30,10 @@ import edu.umd.cs.psl.evaluation.result.*
 import edu.umd.cs.psl.evaluation.statistics.DiscretePredictionComparator
 import edu.umd.cs.psl.evaluation.statistics.DiscretePredictionStatistics
 import edu.umd.cs.psl.evaluation.statistics.filter.MaxValueFilter
+
+import edu.umd.cs.psl.evaluation.statistics.RankingScore
+import edu.umd.cs.psl.evaluation.statistics.SimpleRankingComparator
+
 import edu.umd.cs.psl.groovy.*
 import edu.umd.cs.psl.model.Model
 import edu.umd.cs.psl.model.argument.ArgumentType
@@ -46,10 +50,6 @@ import edu.umd.cs.psl.ui.loading.*
 import edu.umd.cs.psl.util.database.Queries
 import edu.ucsc.cs.utils.Evaluator;
 
-import edu.umd.cs.psl.evaluation.statistics.RankingScore
-import edu.umd.cs.psl.evaluation.statistics.SimpleRankingComparator
-
-
 
 //dataSet = "fourforums"
 dataSet = "stance-classification"
@@ -61,6 +61,8 @@ def defaultPath = System.getProperty("java.io.tmpdir")
 String dbPath = cb.getString("dbPath", defaultPath + File.separator + dataSet)
 DataStore data = new RDBMSDataStore(new H2DatabaseDriver(Type.Disk, dbPath, true), cb)
 
+initialWeight = 1
+
 PSLModel model = new PSLModel(this, data)
 
 /*
@@ -69,6 +71,12 @@ PSLModel model = new PSLModel(this, data)
  * or (authorID, postID)
  * Observed predicates
  */
+
+model.add predicate: "writesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+model.add predicate: "participates" , types:[ArgumentType.UniqueID, ArgumentType.String]
+model.add predicate: "agreesAuth" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
+model.add predicate: "disagreesAuth" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
+
 
 /*
  * Post level observed predicates
@@ -83,6 +91,14 @@ model.add predicate: "hasLabelAnti" , types:[ArgumentType.UniqueID, ArgumentType
  */
 model.add predicate: "topic" , types:[ArgumentType.String]
 
+
+/*
+ * Latent, open predicates for latent network
+ */
+
+model.add predicate: "supports" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+model.add predicate: "against" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+
 /*
  * Target predicates
  */
@@ -93,13 +109,73 @@ model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.St
 model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 
+//model.add predicate: "agreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+//model.add predicate: "disagreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
 
-model.add rule : (hasLabelPro(P, T) ) >> isProPost(P, T) , weight : 1
-model.add rule : (hasLabelAnti(P, T) ) >> isAntiPost(P, T) , weight : 1
 
-model.add rule : isProPost(P, T) >> ~isAntiPost(P, T) , constraint: true
+/*
+ * Rule expressing that an author and their post will have the same stances and same agreement behavior 
+ * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
+ */
+
+model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : initialWeight
+model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight :initialWeight
+
+
+model.add rule : (isAntiPost(P, T) & writesPost(A, P)) >> isAntiAuth(A, T), weight : initialWeight
+model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAntiPost(P, T), weight : initialWeight
+
+
+/*
+ * Propagating stance with the inferred network
+ * Add participates predicate as a clause
+ * second rule is actually propagating stance from B -> A
+ * encode an actual isAnti predicate
+ * small development dataset
+ */
+
+model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : initialWeight
+model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+
+
+model.add rule : (against(A1, A2) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (against(A1, A2) & (A1 - A2) & participates(A1, T) & participates(A2, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (against(A1, A2) & (A1 - A2) & participates(A2, T) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+model.add rule : (against(A1, A2) & (A1 - A2) & participates(A1, T) & participates(A2, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
+
+/*
+ * agreement and disagreement to against and supports
+ */
+
+model.add rule : (agreesAuth(A1, A2, P) & (A1 - A2)) >> supports(A1, A2) , weight : initialWeight
+model.add rule : (disagreesAuth(A1, A2, P) & (A1 - A2)) >> against(A1, A2) , weight : initialWeight
+
+/*
+ * Transitivity/triad rules for supports/against
+ */
+
+/*
+model.add rule : (supports(A1, A2, T) & supports(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
+model.add rule : (supports(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
+
+model.add rule : (against(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
+model.add rule : (against(A1, A2, T) & supports(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
+
+model.add rule : (supports(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
+model.add rule : (supports(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
+
+model.add rule : (against(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
+model.add rule : (against(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
+*/
+//Prior that the label given by the text classifier is indeed the stance label
+
+model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : initialWeight
+model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : initialWeight
+
+model.add rule : (isProPost(P, T)) >> ~isAntiPost(P, T) , constraint: true
 model.add rule: (~(isAntiPost(P, T)) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
-
 
 /*
  * Inserting data into the data store
@@ -138,9 +214,20 @@ InserterUtils.loadDelimitedData(inserter, dir+"antilabels.csv", ",");
 inserter = data.getInserter(hasTopic, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"post_topics.csv", ",");
 
+inserter = data.getInserter(writesPost, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"author_posts.csv", ",");
+
 inserter = data.getInserter(topic, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"topics.csv", ",");
 
+inserter = data.getInserter(participates, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"participates.csv", ",")
+
+inserter = data.getInserter(agreesAuth, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"agreesAuth.csv",",");
+
+inserter = data.getInserter(disagreesAuth, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir+"disgreesAuth.csv", ",");
 
 /*
  * Ground truth for training data for weight learning
@@ -158,6 +245,15 @@ InserterUtils.loadDelimitedData(inserter, dir+"post_anti.csv",",");
 inserter = data.getInserter(isAntiAuth, truth_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"authoranti.csv", ",");
 
+/*
+ * Used later on to populate training DB with all possible interactions
+ */
+
+inserter = data.getInserter(supports, dummy_tr)
+InserterUtils.loadDelimitedData(inserter, dir + "topic_ind_interaction.csv", ",")
+
+inserter = data.getInserter(against, dummy_tr)
+InserterUtils.loadDelimitedData(inserter, dir + "topic_ind_interaction.csv", ",")
 
 /*db population for all possible stance atoms*/
 
@@ -190,8 +286,20 @@ InserterUtils.loadDelimitedData(inserter, testdir+"antilabels.csv", ",");
 inserter = data.getInserter(hasTopic, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"post_topics.csv", ",");
 
+inserter = data.getInserter(writesPost, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"author_posts.csv",",");
+
 inserter = data.getInserter(topic, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"topics.csv",",");
+
+inserter = data.getInserter(participates, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"participates.csv",",")
+
+inserter = data.getInserter(agreesAuth, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"agreesAuth.csv",",");
+
+inserter = data.getInserter(disagreesAuth, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir+"disgreesAuth.csv", ",");
 
 /*
  * Random variable partitions
@@ -208,6 +316,14 @@ InserterUtils.loadDelimitedData(inserter, testdir+"post_anti.csv",",");
 
 inserter = data.getInserter(isAntiAuth, authAntiTruth)
 InserterUtils.loadDelimitedData(inserter, testdir+"authoranti.csv", ",");
+
+/*supports and against*/
+
+inserter = data.getInserter(supports, dummy_te)
+InserterUtils.loadDelimitedData(inserter, testdir + "topic_ind_interaction.csv", ",")
+
+inserter = data.getInserter(against, dummy_te)
+InserterUtils.loadDelimitedData(inserter, testdir + "topic_ind_interaction.csv", ",")
 
 /*to populate testDB with the correct rvs */
 inserter = data.getInserter(isProAuth, dummy_te)
@@ -227,9 +343,9 @@ InserterUtils.loadDelimitedData(inserter, testdir + "post_topics.csv", ",")
  * Set up training databases for weight learning using training set
  */
 
-Database distributionDB = data.getDatabase(predict_tr, [hasLabelPro, hasLabelAnti, hasTopic, topic] as Set, observed_tr);
+Database distributionDB = data.getDatabase(predict_tr, [agreesAuth, disagreesAuth, participates, hasLabelPro, hasLabelAnti, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth, isAntiAuth, isAntiPost] as Set)
-Database dummy_DB = data.getDatabase(dummy_tr, [isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
+Database dummy_DB = data.getDatabase(dummy_tr, [supports, against, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
 
 /* Populate distribution DB. */
 DatabasePopulator dbPop = new DatabasePopulator(distributionDB);
@@ -239,12 +355,18 @@ dbPop.populateFromDB(dummy_DB, isProAuth);
 dbPop.populateFromDB(dummy_DB, isAntiAuth);
 
 /*
+ * Populate distribution DB with all possible interactions
+ */
+dbPop.populateFromDB(dummy_DB, supports);
+dbPop.populateFromDB(dummy_DB, against);
+
+
 HardEM weightLearning = new HardEM(model, distributionDB, truthDB, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "
 weightLearning.close();
-*/
+
 /*
  MaxPseudoLikelihood mple = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
  println "about to start weight learning"
@@ -255,14 +377,14 @@ weightLearning.close();
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [hasLabelPro, hasLabelAnti, hasTopic, topic] as Set, observed_te);
+Database testDB = data.getDatabase(predict_te, [agreesAuth, disagreesAuth, participates, hasLabelPro, hasLabelAnti, hasTopic, writesPost, topic] as Set, observed_te);
 
 Database testTruth_postPro = data.getDatabase(postProTruth, [isProPost] as Set)
 Database testTruth_postAnti = data.getDatabase(postAntiTruth, [isAntiPost] as Set)
 Database testTruth_authPro = data.getDatabase(authProTruth, [isProAuth] as Set)
 Database testTruth_authAnti = data.getDatabase(authAntiTruth, [isAntiAuth] as Set)
 
-Database dummy_test = data.getDatabase(dummy_te, [isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
+Database dummy_test = data.getDatabase(dummy_te, [supports, against, isProAuth, isAntiAuth, isProPost, isAntiPost] as Set)
 
 /* Populate in test DB. */
 
@@ -272,6 +394,9 @@ test_populator.populateFromDB(dummy_test, isProPost);
 
 test_populator.populateFromDB(dummy_test, isAntiPost);
 test_populator.populateFromDB(dummy_test, isAntiAuth);
+
+test_populator.populateFromDB(dummy_test, supports);
+test_populator.populateFromDB(dummy_test, against);
 
 /*
  * Inference
@@ -303,9 +428,9 @@ try {
     }
     //Storing the performance values of the current fold
 
-    System.out.println("\nArea under positive-class PR curve for isProPost: " + score[0])
-    System.out.println("Area under negetive-class PR curve for isProPost: " + score[1])
-    System.out.println("Area under ROC curve for isProPost: " + score[2])
+    System.out.println("\nArea under positive-class PR curve: " + score[0])
+    System.out.println("Area under negetive-class PR curve: " + score[1])
+    System.out.println("Area under ROC curve: " + score[2])
 }
 catch (ArrayIndexOutOfBoundsException e) {
     System.out.println("No evaluation data! Terminating!");
