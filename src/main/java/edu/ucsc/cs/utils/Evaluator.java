@@ -22,41 +22,37 @@ import edu.umd.cs.psl.util.database.Queries;
 public class Evaluator {
 	
 	private final Database result;
-	private Database baseline;
 	private Predicate p;
-
+        private String name;
+        private String fold;
 	
-	public Evaluator(Database result, Database baseline, Predicate p) {
+	public Evaluator(Database result, Predicate p, String name, String fold) {
 		this.result = result;
-		this.baseline = baseline;
 		this.p = p;
-		
+                this.name = name;
+                this.fold = fold;		
 	}
 	
 	public void outputToFile(){
 		BufferedWriter writer = null;
-		String dir = "/Users/dhanyasridhar/Documents/psl-stance/";
-		String groundTruthFile = p.toString() + "_truth.csv";
-		String resultsFile = p.toString() + "_inference_results.csv";
+		String dir = "output" + java.io.File.separator;
+		String resultsFile = dir +  fold + "_result_" + name + ".csv";
+                
 		try {
 			writer = new BufferedWriter(new FileWriter(resultsFile));
 			
 			for (GroundAtom atom : Queries.getAllAtoms(result, p)){
 				GroundTerm[] terms = atom.getArguments();
-				writer.append(terms[0] + "," + terms[1] + "," + atom.getValue() + "\n");
+                                
+                                StringBuilder output = new StringBuilder();
+                                for (GroundTerm t : terms){
+                                    output.append(t + ",");
+                                }
+                                
+				writer.append(output.toString() + atom.getValue() + "\n");
                                 writer.flush();
 			}
-			
-			writer = new BufferedWriter(new FileWriter(groundTruthFile));
-			
-			for (GroundAtom atom : Queries.getAllAtoms(baseline, p)){
-				GroundTerm[] terms = atom.getArguments();
-				writer.append(terms[0] + "," + terms[1] + "," + atom.getValue() + "\n");
-                                writer.flush();
-			}
-			writer.close();
-
-		} catch (Exception e) {
+                } catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

@@ -14,6 +14,8 @@ import edu.umd.cs.psl.application.learning.weight.maxmargin.MaxMargin.NormScalin
 import edu.umd.cs.psl.application.learning.weight.random.FirstOrderMetropolisRandOM
 import edu.umd.cs.psl.application.learning.weight.random.HardEMRandOM
 import edu.umd.cs.psl.application.learning.weight.em.HardEM
+import edu.umd.cs.psl.application.learning.weight.em.DualEM
+
 import edu.umd.cs.psl.config.*
 import edu.umd.cs.psl.core.*
 import edu.umd.cs.psl.core.inference.*
@@ -115,9 +117,18 @@ model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.St
 model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 
-//model.add predicate: "agreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
-//model.add predicate: "disagreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
 
+/*Experimental - ideology rules */
+
+//model.add rule : (isProAuth(A, "abortion") & participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage")  , weight : initialWeight
+//model.add rule : (isProAuth(A, "abortion") & participates(A, "gaymarriage")) >> isAntiAuth(A, "gaymarriage")  , weight : initialWeight
+//model.add rule : (isAntiAuth(A, "abortion")& participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage")  , weight : initialWeight
+//model.add rule : (isAntiAuth(A, "abortion")& participates(A, "gaymarriage") ) >> isAntiAuth(A, "gaymarriage")  , weight : initialWeight
+
+//model.add rule : (isProAuth(A, "gaymarriage") & participates(A, "abortion")) >> isProAuth(A, "abortion")  , weight : initialWeight
+//model.add rule : (isProAuth(A, "gaymarriage") & participates(A, "abortion")) >> isAntiAuth(A, "abortion")  , weight : initialWeight
+//model.add rule : (isAntiAuth(A, "gaymarriage") & participates(A, "abortion")) >> isProAuth(A, "abortion")  , weight : initialWeight
+//model.add rule : (isAntiAuth(A, "gaymarriage") & participates(A, "abortion")) >> isAntiAuth(A, "abortion")  , weight : initialWeight
 
 /*
  * Rule expressing that an author and their post will have the same stances and same agreement behavior 
@@ -140,16 +151,25 @@ model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAnt
  * small development dataset
  */
 
+//model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
+//model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
+
+
+//model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+
+
 model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
-model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
 model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : initialWeight
-model.add rule : (supports(A1, A2) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+
+model.add rule : (against(A1, A2) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (against(A1, A2) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isAntiAuth(A2, T), weight : initialWeight
 
 
-model.add rule : (against(A1, A2) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
-model.add rule : (against(A1, A2) & (A1 - A2) & participates(A1, T) & participates(A2, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
-model.add rule : (against(A1, A2) & (A1 - A2) & participates(A2, T) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
-model.add rule : (against(A1, A2) & (A1 - A2) & participates(A1, T) & participates(A2, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
+//model.add rule : (against(A1, A2) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
+//model.add rule : (against(A1, A2) & (A1 - A2) & participates(A1, T) & participates(A2, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
+//model.add rule : (against(A1, A2) & (A1 - A2) & participates(A2, T) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+//model.add rule : (against(A1, A2) & (A1 - A2) & participates(A1, T) & participates(A2, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
+
 
 /*
  * agreement and disagreement to against and supports
@@ -173,24 +193,7 @@ model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2) , weight : in
  */
 model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2) , weight : initialWeight
 
-/*
- * Transitivity/triad rules for supports/against
- */
-
-/*
-model.add rule : (supports(A1, A2, T) & supports(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
-model.add rule : (supports(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
-
-model.add rule : (against(A1, A2, T) & against(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> supports(A1, A3, T) , weight : 1
-model.add rule : (against(A1, A2, T) & supports(A2, A3, T) & (A1 ^ A2) & (A2 ^ A3)) >> against(A1, A3, T) , weight : 1
-
-model.add rule : (supports(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
-model.add rule : (supports(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
-
-model.add rule : (against(A1, A2, T) & supports(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> against(A1, A3, T), weight : 1
-model.add rule : (against(A1, A2, T) & against(A3, A2, T) & (A1 ^ A2) & (A1 ^ A3)) >> supports(A1, A3, T), weight : 1
-*/
-//Prior that the label given by the text classifier is indeed the stance label
+/*Priors*/
 
 model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : initialWeight
 model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : initialWeight
@@ -201,9 +204,6 @@ model.add rule: (~(isAntiPost(P, T)) & hasTopic(P, T)) >> isProPost(P, T), const
 /*
  * Inserting data into the data store
  */
-//fold = 1
-
-//foldStr = "fold" + String.valueOf(fold) + java.io.File.separator;
 
 /* training partitions */
 Partition observed_tr = new Partition(0);
@@ -222,8 +222,6 @@ Partition postAntiTruth = new Partition(8);
 Partition authProTruth = new Partition(9);
 Partition authAntiTruth = new Partition(10);
 
-
-//def dir = 'data'+java.io.File.separator+ foldStr + 'train'+java.io.File.separator;
 def dir = 'data'+java.io.File.separator+ 'stance-dev'+java.io.File.separator + 'train'+java.io.File.separator;
 
 inserter = data.getInserter(hasLabelPro, observed_tr)
@@ -305,7 +303,6 @@ InserterUtils.loadDelimitedData(inserter, dir + "post_topics.csv", ",")
  * Observed partitions
  */
 
-//def testdir = 'data'+java.io.File.separator+ foldStr + 'test'+java.io.File.separator;
 def testdir = 'data'+java.io.File.separator+ 'stance-dev' +java.io.File.separator+ 'test'+java.io.File.separator;
 
 inserter = data.getInserter(hasLabelPro, observed_te)
@@ -407,14 +404,6 @@ weightLearning.learn();
 println " finished weight learning "
 weightLearning.close();
 
-/*
- MaxPseudoLikelihood mple = new MaxPseudoLikelihood(model, trainDB, truthDB, cb);
- println "about to start weight learning"
- mple.learn();
- println " finished weight learning "
- mlpe.close();
- */
-
 println model;
 
 Database testDB = data.getDatabase(predict_te, [sarcastic, nasty, attacks, agreesAuth, disagreesAuth, participates, hasLabelPro, hasLabelAnti, hasTopic, writesPost, topic] as Set, observed_te);
@@ -495,35 +484,6 @@ try {
 catch (ArrayIndexOutOfBoundsException e) {
     System.out.println("No evaluation data! Terminating!");
 }
-
-/* Evaluation */
-
-/*
-def comparator = new DiscretePredictionComparator(testDB)
-comparator.setBaseline(testTruth_postPro)
-comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
-comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
-
-Set<GroundAtom> groundings = Queries.getAllAtoms(testTruth_postPro, isProPost)
-int totalTestExamples = groundings.size()
-DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
-System.out.println("Accuracy: " + stats.getAccuracy())
-System.out.println("F1: " + stats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-
-comparator.setBaseline(testTruth_postAnti)
-comparator.setResultFilter(new MaxValueFilter(isAntiPost, 1))
-comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
-
-Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruth_postAnti, isAntiPost)
-totalTestExamples = authorGroundings.size()
-DiscretePredictionStatistics authorstats = comparator.compare(isAntiPost, totalTestExamples)
-System.out.println("Accuracy: " + authorstats.getAccuracy())
-System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-*/
 
 testDB.close()
 distributionDB.close()

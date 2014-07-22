@@ -14,6 +14,8 @@ import edu.umd.cs.psl.application.learning.weight.maxmargin.MaxMargin.NormScalin
 import edu.umd.cs.psl.application.learning.weight.random.FirstOrderMetropolisRandOM
 import edu.umd.cs.psl.application.learning.weight.random.HardEMRandOM
 import edu.umd.cs.psl.application.learning.weight.em.HardEM
+import edu.umd.cs.psl.application.learning.weight.em.DualEM
+
 import edu.umd.cs.psl.config.*
 import edu.umd.cs.psl.core.*
 import edu.umd.cs.psl.core.inference.*
@@ -103,7 +105,7 @@ model.add predicate: "topic" , types:[ArgumentType.String]
  */
 
 model.add predicate: "supports" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "against" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+//model.add predicate: "against" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 
 /*
  * Target predicates
@@ -113,11 +115,6 @@ model.add predicate: "isAntiAuth" , types:[ArgumentType.UniqueID, ArgumentType.S
 
 model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
-
-
-//model.add predicate: "agreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
-//model.add predicate: "disagreesPost" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
-
 
 /*
  * Rule expressing that an author and their post will have the same stances and same agreement behavior 
@@ -141,44 +138,70 @@ model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAnt
  */
 
 model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
+//model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
 model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> isAntiAuth(A2, T), weight : initialWeight
-model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+//model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+model.add rule : (~supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & participates(A1, T) & isProAuth(A1, T)) >> isAntiAuth(A2, T), weight : initialWeight
+model.add rule : (~supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & participates(A1, T) & isAntiAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
 
 
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
+//model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> ~(isProAuth(A2, T)), weight : initialWeight
+//model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> isProAuth(A2, T), weight : initialWeight
+//model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A2, T) & isAntiAuth(A1, T)) >> ~(isAntiAuth(A2, T)), weight : initialWeight
+//model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isAntiAuth(A1, T))) >> isAntiAuth(A2, T), weight : initialWeight
 
 /*
  * agreement and disagreement to against and supports
  */
 
-model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T)
-model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T)
+model.add rule : (agreesAuth(A1, A2, T) & (A1 - A2)) >> supports(A1, A2, T), weight : initialWeight
+model.add rule : (disagreesAuth(A1, A2, T) & (A1 - A2)) >> ~supports(A1, A2, T), weight: initialWeight
 
 /*
  * Rules relating sarcasm to against
  */
-model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
+model.add rule : (sarcastic(A1, A2, P, T) & (A1 - A2)) >> ~supports(A1, A2, T) , weight : initialWeight
 
 /*
  * Rules relating nastiness to against
  */
-model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
+model.add rule : (nasty(A1, A2, T) & (A1 - A2)) >> ~supports(A1, A2, T) , weight : initialWeight
 
 /*
  * Rules relating attacks to against
  */
-model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> against(A1, A2, T) , weight : initialWeight
+model.add rule : (attacks(A1, A2, T) & (A1 - A2)) >> ~supports(A1, A2, T) , weight : initialWeight
 
 
 /*
- * Cross topic supports and against
+ * Cross topic supports and against - ideology based
  */
+
+//model.add rule : (supports(A, A2, "abortion") & participates(A2, "gaymarriage") & participates(A, "gaymarriage"))  >> supports(A, A2, "gaymarriage") , weight : initialWeight
+//model.add rule : (supports(A, A2, "abortion") & participates(A2, "gaymarriage") & participates(A, "gaymarriage")) >> against(A, A2, "gaymarriage") , weight : initialWeight
+//model.add rule : (against(A, A2,"abortion") & participates(A2, "gaymarriage") & participates(A, "gaymarriage")) >> supports(A,, A2, "gaymarriage") , weight : initialWeight
+//model.add rule : (against(A, A2, "abortion") & participates(A2, "gaymarriage") & participates(A, "gaymarriage")) >> against(A, A2, "gaymarriage") , weight : initialWeight
+
+//model.add rule : (supports(A,A2, "gaymarriage")& participates(A2, "abortion") & participates(A, "abortion")) >> against(A,A2, "abortion") , weight : initialWeight
+//model.add rule : (supports(A, A2, "gaymarriage")& participates(A2, "abortion") & participates(A, "abortion")) >> supports(A, A2,"abortion") , weight : initialWeight
+//model.add rule : (against(A, A2, "gaymarriage")& participates(A2, "abortion") & participates(A, "abortion")) >> supports(A, A2, "abortion") , weight : initialWeight
+//model.add rule : (against(A, A2, "gaymarriage")& participates(A2, "abortion") & participates(A, "abortion")) >> against(A, A2, "abortion") , weight : initialWeight
+ 
+/*Experimental - ideology rules */
+
+model.add rule : (isProAuth(A, "abortion") & participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage")  , weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & participates(A, "gaymarriage")) >> isAntiAuth(A, "gaymarriage")  , weight : initialWeight
+model.add rule : (isAntiAuth(A, "abortion")& participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage")  , weight : initialWeight
+model.add rule : (isAntiAuth(A, "abortion")& participates(A, "gaymarriage") ) >> isAntiAuth(A, "gaymarriage")  , weight : initialWeight
+
+model.add rule : (isProAuth(A, "gaymarriage") & participates(A, "abortion")) >> isProAuth(A, "abortion")  , weight : initialWeight
+model.add rule : (isProAuth(A, "gaymarriage") & participates(A, "abortion")) >> isAntiAuth(A, "abortion")  , weight : initialWeight
+model.add rule : (isAntiAuth(A, "gaymarriage") & participates(A, "abortion")) >> isProAuth(A, "abortion")  , weight : initialWeight
+model.add rule : (isAntiAuth(A, "gaymarriage") & participates(A, "abortion")) >> isAntiAuth(A, "abortion")  , weight : initialWeight
+
+ 
 model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : initialWeight
-model.add rule : (against(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> against(A1, A2, T2), weight : initialWeight
+model.add rule : (~supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> ~supports(A1, A2, T2), weight : initialWeight
 
 /*
  * Transitivity/triad rules for supports/against
@@ -229,8 +252,6 @@ Partition postAntiTruth = new Partition(8);
 Partition authProTruth = new Partition(9);
 Partition authAntiTruth = new Partition(10);
 
-
-//def dir = 'data'+java.io.File.separator+ foldStr + 'train'+java.io.File.separator;
 def dir = 'data'+java.io.File.separator+ 'stance-dev'+java.io.File.separator + 'train'+java.io.File.separator;
 
 inserter = data.getInserter(hasLabelPro, observed_tr)
@@ -408,7 +429,7 @@ dbPop.populateFromDB(dummy_DB, supports);
 dbPop.populateFromDB(dummy_DB, against);
 
 
-HardEM weightLearning = new HardEM(model, distributionDB, truthDB, cb);
+DualEM weightLearning = new DualEM(model, distributionDB, truthDB, cb);
 println "about to start weight learning"
 weightLearning.learn();
 println " finished weight learning "

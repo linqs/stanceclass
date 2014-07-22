@@ -281,13 +281,13 @@ MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference()
 System.out.println("Objective: " + result.getTotalWeightedIncompatibility())
 
-/*
-Evaluator evaluator = new Evaluator(testDB, testTruth_postPro, isProPost);
+
+Evaluator evaluator = new Evaluator(testDB, isProPost, "baseline");
 evaluator.outputToFile();
 
-evaluator = new Evaluator(testDB, testTruth_postAnti, isAntiPost);
+evaluator = new Evaluator(testDB, isAntiPost, "baseline");
 evaluator.outputToFile();
-*/
+
 
 def comparator = new SimpleRankingComparator(testDB)
 comparator.setBaseline(testTruth_postPro)
@@ -331,34 +331,6 @@ catch (ArrayIndexOutOfBoundsException e) {
     System.out.println("No evaluation data! Terminating!");
 }
 
-/* Evaluation */
-
-/*
-def comparator = new DiscretePredictionComparator(testDB)
-comparator.setBaseline(testTruth_postPro)
-comparator.setResultFilter(new MaxValueFilter(isProPost, 1))
-comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
-
-Set<GroundAtom> groundings = Queries.getAllAtoms(testTruth_postPro, isProPost)
-int totalTestExamples = groundings.size()
-DiscretePredictionStatistics stats = comparator.compare(isProPost, totalTestExamples)
-System.out.println("Accuracy: " + stats.getAccuracy())
-System.out.println("F1: " + stats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("Precision: " + stats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("Recall: " + stats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-
-comparator.setBaseline(testTruth_postAnti)
-comparator.setResultFilter(new MaxValueFilter(isAntiPost, 1))
-comparator.setThreshold(Double.MIN_VALUE) // treat best value as true as long as it is nonzero
-
-Set<GroundAtom> authorGroundings = Queries.getAllAtoms(testTruth_postAnti, isAntiPost)
-totalTestExamples = authorGroundings.size()
-DiscretePredictionStatistics authorstats = comparator.compare(isAntiPost, totalTestExamples)
-System.out.println("Accuracy: " + authorstats.getAccuracy())
-System.out.println("F1: " + authorstats.getF1(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("Precision: " + authorstats.getPrecision(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-System.out.println("Recall: " + authorstats.getRecall(DiscretePredictionStatistics.BinaryClass.POSITIVE))
-*/
 
 testDB.close()
 distributionDB.close()

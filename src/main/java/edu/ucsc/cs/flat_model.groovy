@@ -97,23 +97,55 @@ model.add predicate: "isAntiAuth" , types:[ArgumentType.UniqueID, ArgumentType.S
 model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "isAntiPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
+
+/*Experimental - ideology rules */
+
+model.add rule : (isProAuth(A, "abortion") & participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage")  , weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & participates(A, "gaymarriage")) >> isAntiAuth(A, "gaymarriage")  , weight : initialWeight
+model.add rule : (isAntiAuth(A, "abortion") & participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage")  , weight : initialWeight
+model.add rule : (isAntiAuth(A, "abortion") & participates(A, "gaymarriage") ) >> isAntiAuth(A, "gaymarriage")  , weight : initialWeight
+
+model.add rule : (isProAuth(A, "gaymarriage") & participates(A, "abortion")) >> isProAuth(A, "abortion")  , weight : initialWeight
+model.add rule : (isProAuth(A, "gaymarriage") & participates(A, "abortion")) >> isAntiAuth(A, "abortion")  , weight : initialWeight
+model.add rule : (isAntiAuth(A, "gaymarriage") & participates(A, "abortion")) >> isProAuth(A, "abortion")  , weight : initialWeight
+model.add rule : (isAntiAuth(A, "gaymarriage") & participates(A, "abortion")) >> isAntiAuth(A, "abortion")  , weight : initialWeight
+
 /*
  * Rule expressing that an author and their post will have the same stances and same agreement behavior 
  * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
  */
-
 model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : initialWeight
 model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight :initialWeight
 
+/*
+model.add rule : (isProPost(P, "abortion") & writesPost(A, P)) >> isProAuth(A, "abortion"), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & writesPost(A, P) & hasTopic(P, "abortion")) >> isProPost(P, "abortion"), weight :initialWeight
+model.add rule : (isProPost(P, "gaymarriage") & writesPost(A, P)) >> isProAuth(A, "gaymarriage"), weight : initialWeight
+model.add rule : (isProAuth(A, "gaymarriage") & writesPost(A, P) & hasTopic(P, "gaymarriage")) >> isProPost(P, "gaymarriage"), weight :initialWeight
+*/
 
 model.add rule : (isAntiPost(P, T) & writesPost(A, P)) >> isAntiAuth(A, T), weight : initialWeight
 model.add rule : (isAntiAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isAntiPost(P, T), weight : initialWeight
 
+/*
+model.add rule : (isAntiPost(P, "abortion") & writesPost(A, P)) >> isAntiAuth(A, "abortion"), weight : initialWeight
+model.add rule : (isAntiAuth(A, "abortion") & writesPost(A, P) & hasTopic(P, "abortion")) >> isAntiPost(P, "abortion"), weight : initialWeight
+model.add rule : (isAntiPost(P, "gaymarriage") & writesPost(A, P)) >> isAntiAuth(A, "gaymarriage"), weight : initialWeight
+model.add rule : (isAntiAuth(A, "gaymarriage") & writesPost(A, P) & hasTopic(P, "gaymarriage")) >> isAntiPost(P, "gaymarriage"), weight : initialWeight
+*/
+
 //Prior that the label given by the text classifier is indeed the stance label
+
 
 model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : initialWeight
 model.add rule : (hasLabelAnti(P, T)) >> isAntiPost(P, T) , weight : initialWeight
 
+/*
+model.add rule : (hasLabelPro(P, "abortion")) >> isProPost(P, "abortion") , weight : initialWeight
+model.add rule : (hasLabelAnti(P, "abortion")) >> isAntiPost(P, "abortion") , weight : initialWeight
+model.add rule : (hasLabelPro(P, "gaymarriage")) >> isProPost(P, "gaymarriage") , weight : initialWeight
+model.add rule : (hasLabelAnti(P, "gaymarriage")) >> isAntiPost(P, "gaymarriage") , weight : initialWeight
+*/
 model.add rule : (isProPost(P, T)) >> ~isAntiPost(P, T) , constraint: true
 model.add rule: (~(isAntiPost(P, T)) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
 

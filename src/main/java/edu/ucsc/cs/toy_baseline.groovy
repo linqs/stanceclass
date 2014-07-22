@@ -1,0 +1,128 @@
+package edu.ucsc.cs
+
+import java.util.Set;
+import edu.umd.cs.bachuai13.util.DataOutputter;
+import edu.umd.cs.bachuai13.util.FoldUtils;
+import edu.umd.cs.bachuai13.util.GroundingWrapper;
+import edu.umd.cs.psl.application.inference.MPEInference
+import edu.umd.cs.psl.application.inference.LazyMPEInference;
+import edu.umd.cs.psl.application.learning.weight.maxlikelihood.LazyMaxLikelihoodMPE;
+import edu.umd.cs.psl.application.learning.weight.maxlikelihood.MaxLikelihoodMPE
+import edu.umd.cs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood
+import edu.umd.cs.psl.application.learning.weight.maxmargin.MaxMargin
+import edu.umd.cs.psl.application.learning.weight.maxmargin.MaxMargin.NormScalingType
+import edu.umd.cs.psl.application.learning.weight.random.FirstOrderMetropolisRandOM
+import edu.umd.cs.psl.application.learning.weight.random.HardEMRandOM
+import edu.umd.cs.psl.application.learning.weight.em.HardEM
+import edu.umd.cs.psl.config.*
+import edu.umd.cs.psl.core.*
+import edu.umd.cs.psl.core.inference.*
+import edu.umd.cs.psl.database.DataStore
+import edu.umd.cs.psl.database.Database
+import edu.umd.cs.psl.database.DatabasePopulator
+import edu.umd.cs.psl.database.DatabaseQuery
+import edu.umd.cs.psl.database.Partition
+import edu.umd.cs.psl.database.ResultList
+import edu.umd.cs.psl.database.rdbms.RDBMSDataStore
+import edu.umd.cs.psl.database.rdbms.driver.H2DatabaseDriver
+import edu.umd.cs.psl.database.rdbms.driver.H2DatabaseDriver.Type
+import edu.umd.cs.psl.evaluation.result.*
+import edu.umd.cs.psl.evaluation.statistics.DiscretePredictionComparator
+import edu.umd.cs.psl.evaluation.statistics.DiscretePredictionStatistics
+import edu.umd.cs.psl.evaluation.statistics.filter.MaxValueFilter
+import edu.umd.cs.psl.groovy.*
+import edu.umd.cs.psl.model.Model
+import edu.umd.cs.psl.model.argument.ArgumentType
+import edu.umd.cs.psl.model.argument.GroundTerm
+import edu.umd.cs.psl.model.argument.UniqueID
+import edu.umd.cs.psl.model.argument.Variable
+import edu.umd.cs.psl.model.atom.GroundAtom
+import edu.umd.cs.psl.model.atom.QueryAtom
+import edu.umd.cs.psl.model.atom.RandomVariableAtom
+import edu.umd.cs.psl.model.kernel.CompatibilityKernel
+import edu.umd.cs.psl.model.parameters.PositiveWeight
+import edu.umd.cs.psl.model.parameters.Weight
+import edu.umd.cs.psl.ui.loading.*
+import edu.umd.cs.psl.util.database.Queries
+
+import edu.umd.cs.psl.evaluation.statistics.RankingScore
+import edu.umd.cs.psl.evaluation.statistics.SimpleRankingComparator
+import edu.ucsc.cs.utils.Evaluator;
+
+
+
+//dataSet = "fourforums"
+dataSet = "stance-classification"
+ConfigManager cm = ConfigManager.getManager()
+ConfigBundle cb = cm.getBundle(dataSet)
+
+def defaultPath = System.getProperty("java.io.tmpdir")
+//String dbPath = cb.getString("dbPath", defaultPath + File.separator + "psl-" + dataSet)
+String dbPath = cb.getString("dbPath", defaultPath + File.separator + dataSet)
+DataStore data = new RDBMSDataStore(new H2DatabaseDriver(Type.Disk, dbPath, true), cb)
+
+fold = args[1]
+def dir = 'data'+java.io.File.separator + fold + java.io.File.separator + 'train' + java.io.File.separator;
+def testdir = 'data'+java.io.File.separator + fold + java.io.File.separator + 'test' + java.io.File.separator;
+
+PSLModel model = new PSLModel(this, data)
+
+/* 
+ * List of predicates with their argument types
+ * writesPost(Author, Post) -- observed
+ * participatesIn(Author, Topic) -- observed
+ * hasTopic(Post, Topic) -- observed
+ * isProAuth(Author, Topic) -- target
+ * isProPost(Post, Topic) -- target
+ * agreesAuth(Author, Author) -- observed 
+ * agreesPost(Post, Post) -- observed
+ * hasLabelPro(Post, Topic) -- observed
+ */
+ 
+model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.String]
+model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
+
+model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : 1
+model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : 1
+
+/*
+ * Inserting data into the data store
+ */
+
+Partition observed_te = new Partition(3);
+Partition predict_te = new Partition(4);
+Partition truth_te = new Partition(5);
+
+
+inserter = data.getInserter(hasLabelPro, observed_te)
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"toyLabel.csv", ",");
+
+/*
+ * Label partitions
+ */
+
+inserter = data.getInserter(isProPost, truth_te)
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"toyPro.csv",",");
+
+
+Database testDB = data.getDatabase(predict_te, [hasLabelPro] as Set, observed_te);
+Database testTruthDB = data.getDatabase(truth_te, [isProPost] as Set)
+
+/* Populate isProPost in test DB. */
+
+DatabasePopulator test_pop = new DatabasePopulator(testDB);
+test_pop.populateFromDB(testTruthDB, isProPost);
+
+
+/*
+ * Inference
+ */
+ 
+MPEInference mpe = new MPEInference(model, testDB, cb)
+FullInferenceResult result = mpe.mpeInference()
+
+Evaluator evaluator = new Evaluator(testDB, isProPost, "toy");
+evaluator.outputToFile();
+
+testTruthDB.close()
+testDB.close()
