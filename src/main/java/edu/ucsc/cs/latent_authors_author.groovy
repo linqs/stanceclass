@@ -150,17 +150,52 @@ model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isPr
 /* simple stance rules*/
 
 
-model.add rule : (agrees(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> isProPost(P2, T), weight : initialWeight
-model.add rule : (agrees(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight :initialWeight
+model.add rule : (agrees(P1, P2, A1, A2) & (A1-A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
+model.add rule : (agrees(P1, P2, A1, A2) & (A1-A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
 
-model.add rule : (sarcastic(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (sarcastic(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+model.add rule : (sarcastic(P1, P2, A1, A2) & (A1-A2) & ~hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
+model.add rule : (sarcastic(P1, P2, A1, A2) & (A1-A2) & hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
 
-model.add rule : (nasty(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (nasty(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+model.add rule : (nasty(P1, P2, A1, A2) & (A1-A2) & ~hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
+model.add rule : (nasty(P1, P2, A1, A2) & (A1-A2) & hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
 
-model.add rule : (attacks(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (attacks(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+model.add rule : (attacks(P1, P2, A1, A2) & (A1-A2) & ~hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
+model.add rule : (attacks(P1, P2, A1, A2) & (A1-A2) & hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+
+/*
+ * Propagating stance with the inferred network
+ * Add participates predicate as a clause
+ * second rule is actually propagating stance from B -> A
+ * encode an actual isAnti predicate
+ * small development dataset
+ */
+
+/*
+ * Rules relating attitudes to stance
+ */
+
+/*
+model.add rule : (agrees(P1, P2, A1, A2) & (P1 - P2) & (A1 - A2) & participates(A1, T) & participates(A2, T)) >> supports(A1, A2, T), weight : initialWeight
+model.add rule : (sarcastic(P1, P2, A1, A2) & (P1 - P2) & (A1 - A2) & participates(A1, T) & participates(A2, T)) >> ~supports(A1, A2, T) , weight : initialWeight
+model.add rule : (nasty(P1, P2, A1, A2) & (P1 - P2) & (A1 - A2) & participates(A1, T) & participates(A2, T)) >> ~supports(A1, A2, T) , weight : initialWeight
+model.add rule : (attacks(P1, P2, A1, A2) & (P1 - P2) & (A1 - A2) & participates(A1, T) & participates(A2, T)) >> ~supports(A1, A2, T) , weight : initialWeight
+
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T2) & participates(A2, T2)) >> supports(A1, A2, T2), weight : initialWeight
+model.add rule : (~supports(A1, A2, T) & valInt(A1, A2, T) & valInt(A1, A2, T2) & (A1 - A2) & participates(A1, T) & participates(A2, T) & participates(A1, T2) & participates(A2, T2)) >> ~supports(A1, A2, T2), weight : initialWeight
+
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A2, T) & isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & participates(A1, T) & topic(T) & ~(isProAuth(A1, T))) >> ~(isProAuth(A2, T)), weight : initialWeight
+model.add rule : (~supports(A1, A2, T) & (A1 - A2) & valInt(A1, A2, T) & participates(A2, T) & participates(A1, T) & isProAuth(A1, T)) >> ~isProAuth(A2, T), weight : initialWeight
+model.add rule : (~supports(A1, A2, T) & (A1 - A2) & valInt(A1, A2, T) & participates(A2, T) & participates(A1, T) & ~isProAuth(A1, T)) >> isProAuth(A2, T), weight : initialWeight
+*/
+
+/*
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
+model.add rule : (~supports(A1, A2, T) & valInt(A1, A2, T) & (A1 - A2) & hasIdeologyA(A1)) >> hasIdeologyB(A2), weight : initialWeight
+
+model.add rule : (supports(A1, A2, T) & (A1 - A2) & hasIdeologyB(A1)) >> hasIdeologyB(A2), weight : initialWeight
+model.add rule : (~supports(A1, A2, T) & valInt(A1, A2, T) & (A1 - A2) & hasIdeologyB(A1)) >> hasIdeologyA(A2), weight : initialWeight
+*/
 
 
 model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, T) & participates(A2, T)) >> isProAuth(A2, T), weight : initialWeight
@@ -234,30 +269,13 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness.csv", ",");
 inserter = data.getInserter(attacks, observed_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack.csv", ",");
 
-
 inserter = data.getInserter(valInt, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"supports.csv", ",");
 
-/*load sentiment predicates binarized */
-/*
-inserter = data.getInserter(agreesAuth, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"agreesAuth.csv",",");
+inserter = data.getInserter(hasIdeologyA, observed_tr)
+inserter.insertValue(1.0, "a624")
+inserter.insertValue(0.0, "a859")
 
-inserter = data.getInserter(disagreesAuth, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"disagreesAuth.csv", ",");
-
-inserter = data.getInserter(sarcastic, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"sarcasm.csv", ",");
-
-inserter = data.getInserter(nasty, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"nastiness.csv", ",");
-
-inserter = data.getInserter(attacks, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"attack.csv", ",");
-
-inserter = data.getInserter(valInt, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"supports.csv", ",");
-*/
 
 /*
  * Ground truth for training data for weight learning
@@ -343,6 +361,9 @@ InserterUtils.loadDelimitedData(inserter, testdir+"attack.csv", ",");
 inserter = data.getInserter(valInt, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"supports.csv", ",");
 
+inserter = data.getInserter(hasIdeologyA, observed_te)
+inserter.insertValue(1.0, "a799");
+inserter.insertValue(1.0, "a118");
 
 /*
  * Random variable partitions
@@ -428,9 +449,9 @@ FullInferenceResult result = mpe.mpeInference();
 //evaluator = new Evaluator(testDB, supports, "supports", fold);
 //evaluator.outputToFile();
 
-///*output prediction results */
-//evaluator = new Evaluator(testDB, hasIdeologyA, "ideologyA_single", fold);
-//evaluator.outputToFile();
+/*output prediction results */
+evaluator = new Evaluator(testDB, hasIdeologyA, "ideologyA_authors_author", fold);
+evaluator.outputToFile();
 
 /* Accuracy */
 def discComp = new DiscretePredictionComparator(testDB)
