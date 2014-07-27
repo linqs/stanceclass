@@ -91,16 +91,20 @@ model.add predicate: "participates" , types:[ArgumentType.UniqueID, ArgumentType
 /*
  * Author predicates for social attitudes e.g. sarcasm, nasty, attack
  */
+ 
+ 
+model.add predicate: "sarcastic" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+model.add predicate: "nasty" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+model.add predicate: "attacks" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+model.add predicate: "agrees" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID]
+
+
 /*
-model.add predicate: "sarcastic" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "nasty" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "attacks" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "agrees" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
-*/
 model.add predicate: "sarcastic" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
 model.add predicate: "nasty" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
 model.add predicate: "attacks" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
 model.add predicate: "agrees" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
+*/
 
 /*
  * Post level observed predicates
@@ -143,26 +147,26 @@ model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.St
 //model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), weight : initialWeight
 //model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), weight : initialWeight
 
-model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), constraint:true
-model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
-model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), constraint:true
-model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), constraint:true
+//model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), constraint:true
+//model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
+//model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), constraint:true
+//model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), constraint:true
 
 
 /* simple stance rules*/
 
 
-model.add rule : (agrees(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> isProPost(P2, T), weight : initialWeight
-model.add rule : (agrees(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight :initialWeight
+model.add rule : (agrees(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> isProPost(P2, T), weight : initialWeight
+model.add rule : (agrees(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight :initialWeight
 
-model.add rule : (sarcastic(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (sarcastic(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+model.add rule : (sarcastic(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
+model.add rule : (sarcastic(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
 
-model.add rule : (nasty(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (nasty(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+model.add rule : (nasty(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
+model.add rule : (nasty(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
 
-model.add rule : (attacks(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (attacks(P1, P2, A1, A2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+model.add rule : (attacks(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
+model.add rule : (attacks(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
 
 
 //Prior that the label given by the text classifier is indeed the stance label
@@ -418,17 +422,17 @@ test_populator.populateFromDB(dummy_test, hasIdeologyA);
 MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference();
 
-/*output prediction results */
-//Evaluator evaluator = new Evaluator(testDB, isProPost, "psl", fold);
-//evaluator.outputToFile();
+///*output prediction results */
+Evaluator evaluator = new Evaluator(testDB, isProPost, "psl_binary_attitudes", fold);
+evaluator.outputToFile();
 
 ///*output prediction results */
 //evaluator = new Evaluator(testDB, supports, "supports", fold);
 //evaluator.outputToFile();
 
-/*output prediction results */
-evaluator = new Evaluator(testDB, hasIdeologyA, "ideologyA_topics", fold);
-evaluator.outputToFile();
+///*output prediction results */
+//evaluator = new Evaluator(testDB, hasIdeologyA, "ideologyA_topics", fold);
+//evaluator.outputToFile();
 
 /* Accuracy */
 def discComp = new DiscretePredictionComparator(testDB)

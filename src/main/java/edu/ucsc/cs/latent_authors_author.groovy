@@ -136,15 +136,15 @@ model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.St
  * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
  */
 
-//model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : initialWeight
-//model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight :initialWeight
-//model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), weight : initialWeight
-//model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), weight : initialWeight
+model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : initialWeight
+model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight :initialWeight
+model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), weight : initialWeight
+model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), weight : initialWeight
 
-model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), constraint:true
-model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
-model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), constraint:true
-model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), constraint:true
+//model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), constraint:true
+//model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
+//model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), constraint:true
+//model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), constraint:true
 
 
 /* simple stance rules*/
@@ -204,11 +204,11 @@ model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A
 model.add rule : (isProAuth(A1, T) & isProAuth(A2, T)  & (A1 - A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 model.add rule : (~isProAuth(A1, T) & ~isProAuth(A2, T) & (A1 - A2) & participates(A1, T) & participates(A2, T) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, T) & participates(A2, T)) >> isProAuth(A2, T), weight : initialWeight
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, T) & participates(A1, T) & participates(A2, T)) >> ~isProAuth(A2, T), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, T) & participates(A2, T)) >> isProAuth(A2, T), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, T) & participates(A1, T) & participates(A2, T)) >> ~isProAuth(A2, T), weight : initialWeight
 
-model.add rule : (isProAuth(A1, T) & isProAuth(A2, T)  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
-model.add rule : (~isProAuth(A1, T) & ~isProAuth(A2, T) & (A1 - A2) & participates(A1, T) & participates(A2, T) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (isProAuth(A1, T) & isProAuth(A2, T)  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (~isProAuth(A1, T) & ~isProAuth(A2, T) & (A1 - A2) & participates(A1, T) & participates(A2, T) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
 
 //Prior that the label given by the text classifier is indeed the stance label
 
@@ -258,16 +258,16 @@ InserterUtils.loadDelimitedData(inserter, dir+"participates.csv", ",")
 /*load sentiment predicates with soft truth values*/
 
 inserter = data.getInserter(agrees, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"agreement.csv",",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"agreement_binary_verbose.csv",",");
 
 inserter = data.getInserter(sarcastic, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"sarcasm.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"sarcasm_binary_verbose.csv", ",");
 
 inserter = data.getInserter(nasty, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness_binary_verbose.csv", ",");
 
 inserter = data.getInserter(attacks, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack_binary_verbose.csv", ",");
 
 inserter = data.getInserter(valInt, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"supports.csv", ",");
@@ -330,17 +330,16 @@ inserter = data.getInserter(participates, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"participates.csv",",");
 
 inserter = data.getInserter(agrees, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"agreement.csv",",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"agreement_binary_verbose.csv",",");
 
 inserter = data.getInserter(sarcastic, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"sarcasm.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"sarcasm_binary_verbose.csv", ",");
 
 inserter = data.getInserter(nasty, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"nastiness.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"nastiness_binary_verbose.csv", ",");
 
 inserter = data.getInserter(attacks, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"attack.csv", ",");
-
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"attack_binary_verbose.csv", ",");
 /*
 inserter = data.getInserter(agreesAuth, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"agreesAuth.csv",",");
@@ -442,8 +441,8 @@ MPEInference mpe = new MPEInference(model, testDB, cb)
 FullInferenceResult result = mpe.mpeInference();
 
 /*output prediction results */
-//Evaluator evaluator = new Evaluator(testDB, isProPost, "psl", fold);
-//evaluator.outputToFile();
+Evaluator evaluator = new Evaluator(testDB, isProPost, "psl_ideology", fold);
+evaluator.outputToFile();
 
 ///*output prediction results */
 //evaluator = new Evaluator(testDB, supports, "supports", fold);

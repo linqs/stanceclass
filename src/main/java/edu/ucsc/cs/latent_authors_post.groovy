@@ -105,7 +105,7 @@ model.add predicate: "agrees" , types:[ArgumentType.UniqueID, ArgumentType.Uniqu
  */
 
 model.add predicate: "hasTopic" , types:[ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
+model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String, ArgumentType.UniqueID]
 
 /*
  * Auxiliary topic predicate
@@ -166,19 +166,13 @@ model.add rule : (attacks(P1, P2, A1, A2) & (A1-A2) & hasIdeologyA(A1)) >> ~hasI
 model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, T) & participates(A2, T)) >> isProAuth(A2, T), weight : initialWeight
 model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, T) & participates(A1, T) & participates(A2, T)) >> ~isProAuth(A2, T), weight : initialWeight
 
-model.add rule : (isProAuth(A1, T) & isProAuth(A2, T)  & (A1 - A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
-model.add rule : (~isProAuth(A1, T) & ~isProAuth(A2, T) & (A1 - A2) & participates(A1, T) & participates(A2, T) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
-
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, T) & participates(A2, T)) >> isProAuth(A2, T), weight : initialWeight
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, T) & participates(A1, T) & participates(A2, T)) >> ~isProAuth(A2, T), weight : initialWeight
-
-model.add rule : (isProAuth(A1, T) & isProAuth(A2, T)  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
-model.add rule : (~isProAuth(A1, T) & ~isProAuth(A2, T) & (A1 - A2) & participates(A1, T) & participates(A2, T) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+model.add rule : (hasLabelPro(P1, T, A) & hasLabelPro(P2, T, A2) & (P1 - P2) & hasIdeologyA(A)) >> hasIdeologyA(A2), weight : initialWeight
+model.add rule : (~hasLabelPro(P1, T, A) & ~hasLabelPro(P2, T, A2) & hasTopic(P1, T) & hasTopic(P2, T) & participates(A2, T) & (P1 - P2) & hasIdeologyA(A)) >> hasIdeologyA(A2), weight : initialWeight
 
 //Prior that the label given by the text classifier is indeed the stance label
 
-model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : initialWeight
-model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : initialWeight
+model.add rule : (hasLabelPro(P, T, A)) >> isProPost(P, T) , weight : initialWeight
+model.add rule : (~(hasLabelPro(P, T, A)) & participates(A, T)) >> ~(isProPost(P, T)) , weight : initialWeight
 
 /*
  * Inserting data into the data store
@@ -202,7 +196,7 @@ Partition authProTruth = new Partition(9);
 Partition authAntiTruth = new Partition(10);
 
 inserter = data.getInserter(hasLabelPro, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"hasLabelPro.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"hasLabelPro_author.csv", ",");
 
 //inserter = data.getInserter(isProPost, observed_tr)
 //InserterUtils.loadDelimitedDataTruth(inserter, dir+"hasLabelPro.csv", ",");
@@ -294,7 +288,7 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir + "isProPost.csv", ",")
  */
 
 inserter = data.getInserter(hasLabelPro, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"hasLabelPro.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"hasLabelPro_author.csv", ",");
 
 //inserter = data.getInserter(isProPost, observed_te)
 //InserterUtils.loadDelimitedDataTruth(inserter, testdir+"hasLabelPro.csv", ",");
@@ -428,9 +422,9 @@ FullInferenceResult result = mpe.mpeInference();
 //evaluator = new Evaluator(testDB, supports, "supports", fold);
 //evaluator.outputToFile();
 
-///*output prediction results */
-//evaluator = new Evaluator(testDB, hasIdeologyA, "ideologyA_single", fold);
-//evaluator.outputToFile();
+/*output prediction results */
+evaluator = new Evaluator(testDB, hasIdeologyA, "ideologyA_authors_post", fold);
+evaluator.outputToFile();
 
 /* Accuracy */
 def discComp = new DiscretePredictionComparator(testDB)

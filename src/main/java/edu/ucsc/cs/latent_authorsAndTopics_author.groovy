@@ -204,11 +204,11 @@ model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A
 model.add rule : (isProAuth(A1, "abortion") & isProAuth(A2, "abortion")  & (A1 - A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 model.add rule : (~isProAuth(A1, "abortion") & ~isProAuth(A2, "abortion") & (A1 - A2) & participates(A1, "abortion") & participates(A2, "abortion") & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "abortion") & participates(A2, "abortion")) >> isProAuth(A2, "abortion"), weight : initialWeight
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, "abortion") & participates(A1, "abortion") & participates(A2, "abortion")) >> ~isProAuth(A2, "abortion"), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "abortion") & participates(A2, "abortion")) >> isProAuth(A2, "abortion"), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, "abortion") & participates(A1, "abortion") & participates(A2, "abortion")) >> ~isProAuth(A2, "abortion"), weight : initialWeight
 
-model.add rule : (isProAuth(A1, "abortion") & isProAuth(A2, "abortion")  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
-model.add rule : (~isProAuth(A1, "abortion") & ~isProAuth(A2, "abortion") & (A1 - A2) & participates(A1, "abortion") & participates(A2, "abortion") & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (isProAuth(A1, "abortion") & isProAuth(A2, "abortion")  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (~isProAuth(A1, "abortion") & ~isProAuth(A2, "abortion") & (A1 - A2) & participates(A1, "abortion") & participates(A2, "abortion") & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
 
 
 model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "gaymarriage") & participates(A2, "gaymarriage")) >> isProAuth(A2, "gaymarriage"), weight : initialWeight
@@ -217,11 +217,11 @@ model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A
 model.add rule : (isProAuth(A1, "gaymarriage") & isProAuth(A2, "gaymarriage")  & (A1 - A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 model.add rule : (~isProAuth(A1, "gaymarriage") & ~isProAuth(A2, "gaymarriage") & (A1 - A2) & participates(A1, "gaymarriage") & participates(A2, "gaymarriage") & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "gaymarriage") & participates(A2, "gaymarriage")) >> isProAuth(A2, "gaymarriage"), weight : initialWeight
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, "gaymarriage") & participates(A1, "gaymarriage") & participates(A2, "gaymarriage")) >> ~isProAuth(A2, "gaymarriage"), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "gaymarriage") & participates(A2, "gaymarriage")) >> isProAuth(A2, "gaymarriage"), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, "gaymarriage") & participates(A1, "gaymarriage") & participates(A2, "gaymarriage")) >> ~isProAuth(A2, "gaymarriage"), weight : initialWeight
 
-model.add rule : (isProAuth(A1, "gaymarriage") & isProAuth(A2, "gaymarriage")  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
-model.add rule : (~isProAuth(A1, "gaymarriage") & ~isProAuth(A2, "gaymarriage") & (A1 - A2) & participates(A1, "gaymarriage") & participates(A2, "gaymarriage") & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (isProAuth(A1, "gaymarriage") & isProAuth(A2, "gaymarriage")  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (~isProAuth(A1, "gaymarriage") & ~isProAuth(A2, "gaymarriage") & (A1 - A2) & participates(A1, "gaymarriage") & participates(A2, "gaymarriage") & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
 
 
 model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "guncontrol") & participates(A2, "guncontrol")) >> isProAuth(A2, "guncontrol"), weight : initialWeight
@@ -230,11 +230,11 @@ model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A
 model.add rule : (isProAuth(A1, "guncontrol") & isProAuth(A2, "guncontrol")  & (A1 - A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 model.add rule : (~isProAuth(A1, "guncontrol") & ~isProAuth(A2, "guncontrol") & (A1 - A2) & participates(A1, "guncontrol") & participates(A2, "guncontrol") & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "guncontrol") & participates(A2, "guncontrol")) >> isProAuth(A2, "guncontrol"), weight : initialWeight
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, "guncontrol") & participates(A1, "guncontrol") & participates(A2, "guncontrol")) >> ~isProAuth(A2, "guncontrol"), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "guncontrol") & participates(A2, "guncontrol")) >> isProAuth(A2, "guncontrol"), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, "guncontrol") & participates(A1, "guncontrol") & participates(A2, "guncontrol")) >> ~isProAuth(A2, "guncontrol"), weight : initialWeight
 
-model.add rule : (isProAuth(A1, "guncontrol") & isProAuth(A2, "guncontrol")  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
-model.add rule : (~isProAuth(A1, "guncontrol") & ~isProAuth(A2, "guncontrol") & (A1 - A2) & participates(A1, "guncontrol") & participates(A2, "guncontrol") & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (isProAuth(A1, "guncontrol") & isProAuth(A2, "guncontrol")  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (~isProAuth(A1, "guncontrol") & ~isProAuth(A2, "guncontrol") & (A1 - A2) & participates(A1, "guncontrol") & participates(A2, "guncontrol") & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
 
 
 model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "evolution") & participates(A2, "evolution")) >> isProAuth(A2, "evolution"), weight : initialWeight
@@ -243,11 +243,11 @@ model.add rule : (hasIdeologyA(A1) & hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A
 model.add rule : (isProAuth(A1, "evolution") & isProAuth(A2, "evolution")  & (A1 - A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 model.add rule : (~isProAuth(A1, "evolution") & ~isProAuth(A2, "evolution") & (A1 - A2) & participates(A1, "evolution") & participates(A2, "evolution") & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "evolution") & participates(A2, "evolution")) >> isProAuth(A2, "evolution"), weight : initialWeight
-model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, "evolution") & participates(A1, "evolution") & participates(A2, "evolution")) >> ~isProAuth(A2, "evolution"), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & isProAuth(A1, "evolution") & participates(A2, "evolution")) >> isProAuth(A2, "evolution"), weight : initialWeight
+//model.add rule : (~hasIdeologyA(A1) & ~hasIdeologyA(A2) & (A1 - A2) & ~isProAuth(A1, "evolution") & participates(A1, "evolution") & participates(A2, "evolution")) >> ~isProAuth(A2, "evolution"), weight : initialWeight
 
-model.add rule : (isProAuth(A1, "evolution") & isProAuth(A2, "evolution")  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
-model.add rule : (~isProAuth(A1, "evolution") & ~isProAuth(A2, "evolution") & (A1 - A2) & participates(A1, "evolution") & participates(A2, "evolution") & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (isProAuth(A1, "evolution") & isProAuth(A2, "evolution")  & (A1 - A2) & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
+//model.add rule : (~isProAuth(A1, "evolution") & ~isProAuth(A2, "evolution") & (A1 - A2) & participates(A1, "evolution") & participates(A2, "evolution") & ~hasIdeologyA(A1)) >> ~hasIdeologyA(A2), weight : initialWeight
 
 //Prior that the label given by the text classifier is indeed the stance label
 
@@ -489,7 +489,7 @@ FullInferenceResult result = mpe.mpeInference();
 //evaluator.outputToFile();
 
 /*output prediction results */
-evaluator = new Evaluator(testDB, hasIdeologyA, "ideologyA_authors_author", fold);
+evaluator = new Evaluator(testDB, hasIdeologyA, "ideologyA_authorsAndTopics_author", fold);
 evaluator.outputToFile();
 
 /* Accuracy */

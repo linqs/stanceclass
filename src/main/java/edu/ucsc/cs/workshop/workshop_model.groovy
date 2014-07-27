@@ -1,4 +1,4 @@
-package edu.ucsc.cs
+package edu.ucsc.cs.workshop
 
 import java.util.Set;
 import edu.umd.cs.bachuai13.util.DataOutputter;
@@ -144,10 +144,10 @@ inserter = data.getInserter(hasLabelPro, observed_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"hasLabelPro.csv", ",");
 
 inserter = data.getInserter(hasTopic, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"post_topics.csv", ",");
+InserterUtils.loadDelimitedData(inserter, dir+"hasTopic.csv", ",");
 
 inserter = data.getInserter(writesPost, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"author_posts.csv", ",");
+InserterUtils.loadDelimitedData(inserter, dir+"writesPost.csv", ",");
 
 inserter = data.getInserter(topic, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"topics.csv", ",");
@@ -181,10 +181,10 @@ inserter = data.getInserter(hasLabelPro, observed_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"hasLabelPro.csv", ",");
 
 inserter = data.getInserter(hasTopic, observed_te)
-InserterUtils.loadDelimitedData(inserter, testdir+"post_topics.csv", ",");
+InserterUtils.loadDelimitedData(inserter, testdir+"hasTopic.csv", ",");
 
 inserter = data.getInserter(writesPost, observed_te)
-InserterUtils.loadDelimitedData(inserter, testdir+"author_posts.csv",",");
+InserterUtils.loadDelimitedData(inserter, testdir+"writesPost.csv",",");
 
 inserter = data.getInserter(topic, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"topics.csv",",");
