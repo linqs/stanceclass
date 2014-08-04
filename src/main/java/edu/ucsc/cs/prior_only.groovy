@@ -98,10 +98,6 @@ model.add predicate: "nasty" , types:[ArgumentType.UniqueID, ArgumentType.Unique
 model.add predicate: "attacks" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "agrees" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 */
-model.add predicate: "sarcastic" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
-model.add predicate: "nasty" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
-model.add predicate: "attacks" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
-model.add predicate: "agrees" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.UniqueID]
 
 /*
  * Post level observed predicates
@@ -138,11 +134,15 @@ model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.St
  * Rule expressing that an author and their post will have the same stances and same agreement behavior 
  * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
  */
+model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : initialWeight
+model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight :initialWeight
+model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), weight : initialWeight
+model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), weight : initialWeight
 
-model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), constraint:true
-model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
-model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), constraint:true
-model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), constraint:true
+//model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), constraint:true
+//model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), constraint:true
+//model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), constraint:true
+//model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), constraint:true
 
 //Prior that the label given by the text classifier is indeed the stance label
 
@@ -191,17 +191,17 @@ InserterUtils.loadDelimitedData(inserter, dir+"participates.csv", ",")
 
 /*load sentiment predicates with soft truth values*/
 
-inserter = data.getInserter(agrees, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"agreement.csv",",");
+//inserter = data.getInserter(agrees, observed_tr)
+//InserterUtils.loadDelimitedDataTruth(inserter, dir+"agreement.csv",",");
 
-inserter = data.getInserter(sarcastic, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"sarcasm.csv", ",");
+//inserter = data.getInserter(sarcastic, observed_tr)
+//InserterUtils.loadDelimitedDataTruth(inserter, dir+"sarcasm.csv", ",");
 
-inserter = data.getInserter(nasty, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness.csv", ",");
+//inserter = data.getInserter(nasty, observed_tr)
+//InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness.csv", ",");
 
-inserter = data.getInserter(attacks, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack.csv", ",");
+//inserter = data.getInserter(attacks, observed_tr)
+//InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack.csv", ",");
 
 
 inserter = data.getInserter(valInt, observed_tr)
@@ -284,17 +284,17 @@ InserterUtils.loadDelimitedData(inserter, testdir+"topic.csv",",");
 inserter = data.getInserter(participates, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"participates.csv",",");
 
-inserter = data.getInserter(agrees, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"agreement.csv",",");
+//inserter = data.getInserter(agrees, observed_te)
+//InserterUtils.loadDelimitedDataTruth(inserter, testdir+"agreement.csv",",");
 
-inserter = data.getInserter(sarcastic, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"sarcasm.csv", ",");
+//inserter = data.getInserter(sarcastic, observed_te)
+//InserterUtils.loadDelimitedDataTruth(inserter, testdir+"sarcasm.csv", ",");
 
-inserter = data.getInserter(nasty, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"nastiness.csv", ",");
+//inserter = data.getInserter(nasty, observed_te)
+//InserterUtils.loadDelimitedDataTruth(inserter, testdir+"nastiness.csv", ",");
 
-inserter = data.getInserter(attacks, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"attack.csv", ",");
+//inserter = data.getInserter(attacks, observed_te)
+//InserterUtils.loadDelimitedDataTruth(inserter, testdir+"attack.csv", ",");
 
 /*
 inserter = data.getInserter(agreesAuth, observed_te)
@@ -352,7 +352,7 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir + "isProPost.csv", ",")
  * Set up training databases for weight learning using training set
  */
 
-Database distributionDB = data.getDatabase(predict_tr, [hasLabelPro, sarcastic, nasty, attacks, agrees, participates, hasTopic, writesPost, topic] as Set, observed_tr);
+Database distributionDB = data.getDatabase(predict_tr, [hasLabelPro, participates, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
 Database dummy_DB = data.getDatabase(dummy_tr, [hasIdeologyA, supports, isProAuth, isProPost] as Set)
 
@@ -374,7 +374,7 @@ weightLearning.close();
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [hasLabelPro, sarcastic, nasty, attacks, agrees, participates, hasTopic, writesPost, topic] as Set, observed_te);
+Database testDB = data.getDatabase(predict_te, [hasLabelPro, hasTopic, writesPost, topic] as Set, observed_te);
 
 Database testTruth_postPro = data.getDatabase(postProTruth, [isProPost] as Set)
 Database testTruth_authPro = data.getDatabase(authProTruth, [isProAuth] as Set)

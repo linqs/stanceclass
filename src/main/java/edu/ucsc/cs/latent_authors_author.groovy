@@ -258,16 +258,16 @@ InserterUtils.loadDelimitedData(inserter, dir+"participates.csv", ",")
 /*load sentiment predicates with soft truth values*/
 
 inserter = data.getInserter(agrees, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"agreement_binary_verbose.csv",",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"agreement_verbose.csv",",");
 
 inserter = data.getInserter(sarcastic, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"sarcasm_binary_verbose.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"sarcasm_verbose.csv", ",");
 
 inserter = data.getInserter(nasty, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness_binary_verbose.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness_verbose.csv", ",");
 
 inserter = data.getInserter(attacks, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack_binary_verbose.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack_verbose.csv", ",");
 
 inserter = data.getInserter(valInt, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"supports.csv", ",");
@@ -330,16 +330,16 @@ inserter = data.getInserter(participates, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"participates.csv",",");
 
 inserter = data.getInserter(agrees, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"agreement_binary_verbose.csv",",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"agreement_verbose.csv",",");
 
 inserter = data.getInserter(sarcastic, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"sarcasm_binary_verbose.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"sarcasm_verbose.csv", ",");
 
 inserter = data.getInserter(nasty, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"nastiness_binary_verbose.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"nastiness_verbose.csv", ",");
 
 inserter = data.getInserter(attacks, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"attack_binary_verbose.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, testdir+"attack_verbose.csv", ",");
 /*
 inserter = data.getInserter(agreesAuth, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"agreesAuth.csv",",");

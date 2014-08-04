@@ -117,18 +117,6 @@ model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.
  * Auxiliary topic predicate
  */
 model.add predicate: "topic" , types:[ArgumentType.String]
-model.add predicate: "ideology" , types:[ArgumentType.String]
-
-/* Latent ideology predicate */
-model.add predicate: "hasIdeologyA" , types:[ArgumentType.UniqueID]
-
-/*
- * Latent, open predicates for latent network
- */
-
-model.add predicate: "supports" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
-model.add predicate: "valInt" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String] 
-//model.add predicate: "against" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 
 /*
  * Target predicates
@@ -142,7 +130,7 @@ model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.St
  * Note that the second is logically equivalent to saying that if author is pro then post will be pro - contrapositive
  */
 
-//model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : initialWeight
+model.add rule : (isProPost(P, T) & writesPost(A, P)) >> isProAuth(A, T), weight : initialWeight
 //model.add rule : (isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> isProPost(P, T), weight :initialWeight
 //model.add rule : (~isProPost(P, T) & writesPost(A, P) & hasTopic(P,T)) >> ~isProAuth(A, T), weight : initialWeight
 //model.add rule : (~isProAuth(A, T) & writesPost(A, P) & hasTopic(P, T)) >> ~isProPost(P, T), weight : initialWeight
@@ -157,22 +145,25 @@ model.add predicate: "isProPost" , types:[ArgumentType.UniqueID, ArgumentType.St
 
 
 model.add rule : (agrees(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> isProPost(P2, T), weight : initialWeight
-model.add rule : (agrees(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight :initialWeight
+//model.add rule : (agrees(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> ~(isProPost(P2, T)), weight :initialWeight
+
+model.add rule : (agrees(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P2, T)) >> isProPost(P1, T), weight : initialWeight
+//model.add rule : (agrees(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P2, T))) >> ~(isProPost(P1, T)), weight :initialWeight
 
 model.add rule : (sarcastic(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (sarcastic(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+//model.add rule : (sarcastic(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
 
 model.add rule : (nasty(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (nasty(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+//model.add rule : (nasty(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
 
 model.add rule : (attacks(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & isProPost(P1, T)) >> ~isProPost(P2, T), weight : initialWeight
-model.add rule : (attacks(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
+//model.add rule : (attacks(P1, P2) & (P1-P2) & hasTopic(P2, T) & hasTopic(P1, T) & ~(isProPost(P1, T))) >> (isProPost(P2, T)), weight :initialWeight
 
 
 //Prior that the label given by the text classifier is indeed the stance label
 
 model.add rule : (hasLabelPro(P, T)) >> isProPost(P, T) , weight : initialWeight
-model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : initialWeight
+//model.add rule : (~(hasLabelPro(P, T))) >> ~(isProPost(P, T)) , weight : initialWeight
 
 /*
  * Inserting data into the data store
@@ -228,14 +219,6 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness.csv", ",");
 inserter = data.getInserter(attacks, observed_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack.csv", ",");
 
-
-inserter = data.getInserter(valInt, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"supports.csv", ",");
-
-inserter = data.getInserter(hasIdeologyA, observed_tr)
-inserter.insertValue(1.0, "a624")
-inserter.insertValue(0.0, "a859")
-
 /*load sentiment predicates binarized */
 /*
 inserter = data.getInserter(agreesAuth, observed_tr)
@@ -266,17 +249,6 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"isProPost.csv",",");
 
 inserter = data.getInserter(isProAuth, truth_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"isProAuth.csv", ",");
-
-/*
- * Used later on to populate training DB with all possible interactions
- */
-
-inserter = data.getInserter(supports, dummy_tr)
-InserterUtils.loadDelimitedData(inserter, dir + "supports.csv", ",")
-
-inserter = data.getInserter(hasIdeologyA, dummy_tr)
-InserterUtils.loadDelimitedData(inserter, dir + "hasIdeologyA.csv", ",")
-
 
 /*db population for all possible stance atoms*/
 
@@ -338,14 +310,6 @@ inserter = data.getInserter(attacks, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"attack.csv", ",");
 */
 
-inserter = data.getInserter(valInt, observed_te)
-InserterUtils.loadDelimitedData(inserter, testdir+"supports.csv", ",");
-
-inserter = data.getInserter(hasIdeologyA, observed_te)
-inserter.insertValue(1.0, "a799");
-inserter.insertValue(1.0, "a118");
-
-
 /*
  * Random variable partitions
  */
@@ -355,15 +319,6 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir+"isProPost.csv",",");
 
 inserter = data.getInserter(isProAuth, authProTruth)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"isProAuth.csv", ",");
-
-/*supports and against*/
-
-inserter = data.getInserter(supports, dummy_te)
-InserterUtils.loadDelimitedData(inserter, testdir + "supports.csv", ",")
-
-inserter = data.getInserter(hasIdeologyA, dummy_te)
-InserterUtils.loadDelimitedData(inserter, testdir + "hasIdeologyA.csv", ",")
-
 
 /*to populate testDB with the correct rvs */
 inserter = data.getInserter(isProAuth, dummy_te)
@@ -379,7 +334,7 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir + "isProPost.csv", ",")
 
 Database distributionDB = data.getDatabase(predict_tr, [hasLabelPro, sarcastic, nasty, attacks, agrees, participates, hasTopic, writesPost, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProPost, isProAuth] as Set)
-Database dummy_DB = data.getDatabase(dummy_tr, [hasIdeologyA, supports, isProAuth, isProPost] as Set)
+Database dummy_DB = data.getDatabase(dummy_tr, [isProAuth, isProPost] as Set)
 
 /* Populate distribution DB. */
 DatabasePopulator dbPop = new DatabasePopulator(distributionDB);
@@ -389,11 +344,11 @@ dbPop.populateFromDB(dummy_DB, isProAuth);
 /*
  * Populate distribution DB with all possible interactions
  */
-dbPop.populateFromDB(dummy_DB, supports);
-dbPop.populateFromDB(dummy_DB, hasIdeologyA);
 
+//DualEM weightLearning = new DualEM(model, distributionDB, truthDB, cb);
 
-DualEM weightLearning = new DualEM(model, distributionDB, truthDB, cb);
+MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(model, distributionDB, truthDB, cb);
+
 weightLearning.learn();
 weightLearning.close();
 
@@ -404,16 +359,13 @@ Database testDB = data.getDatabase(predict_te, [hasLabelPro, sarcastic, nasty, a
 Database testTruth_postPro = data.getDatabase(postProTruth, [isProPost] as Set)
 Database testTruth_authPro = data.getDatabase(authProTruth, [isProAuth] as Set)
 
-Database dummy_test = data.getDatabase(dummy_te, [hasIdeologyA, supports, isProAuth, isProPost] as Set)
+Database dummy_test = data.getDatabase(dummy_te, [isProAuth, isProPost] as Set)
 
 /* Populate in test DB. */
 
 DatabasePopulator test_populator = new DatabasePopulator(testDB);
 test_populator.populateFromDB(dummy_test, isProAuth);
 test_populator.populateFromDB(dummy_test, isProPost);
-
-test_populator.populateFromDB(dummy_test, supports);
-test_populator.populateFromDB(dummy_test, hasIdeologyA);
 
 /*
  * Inference
