@@ -95,6 +95,8 @@ model.add predicate: "nasty" , types:[ArgumentType.UniqueID, ArgumentType.Unique
 model.add predicate: "attacks" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "agrees" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 
+model.add predicate: "responds" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+
 model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 /*
@@ -115,8 +117,8 @@ model.add predicate: "isProAuth" , types:[ArgumentType.UniqueID, ArgumentType.St
 
 /* simple stance rules*/
 
-model.add rule : (agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> isProAuth(A1, T), weight : initialWeight
-model.add rule : (agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> ~(isProAuth(A1, T)), weight :initialWeight
+model.add rule : (agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight
+model.add rule : (agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight
 
 model.add rule : (sarcastic(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight
 model.add rule : (sarcastic(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight
@@ -126,6 +128,9 @@ model.add rule : (nasty(A1, A2, T) & (A1-A2) & participates(A1, T) & participate
 
 model.add rule : (attacks(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight
 model.add rule : (attacks(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight
+
+model.add rule : (responds(A1, A2, T) & (A1 - A2) & isProAuth(A2, T) & participates(A1, T)) >> ~isProAuth(A1, T), weight : initialWeight
+model.add rule : (responds(A1, A2, T) & (A1 - A2) & ~isProAuth(A2, T) & participates(A2, T) & participates(A1, T)) >> isProAuth(A1, T), weight : initialWeight
 
 model.add rule: (hasIdeologyA(A) & participates(A, "abortion")) >> isProAuth(A,"abortion"), weight : initialWeight
 model.add rule: (hasIdeologyA(A) & participates(A, "evolution")) >> isProAuth(A, "evolution"), weight : initialWeight
@@ -186,6 +191,10 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness_author.csv", ",");
 inserter = data.getInserter(attacks, observed_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack_author.csv", ",");
 
+
+inserter = data.getInserter(responds, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir + "responds.csv", ",");
+
 inserter = data.getInserter(hasIdeologyA, observed_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"hasIdeologyA_seed.csv", ",");
 
@@ -236,6 +245,10 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir+"nastiness_author.csv", "
 inserter = data.getInserter(attacks, observed_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"attack_author.csv", ",");
 
+inserter = data.getInserter(responds, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir + "responds.csv", ",");
+
+
 inserter = data.getInserter(hasIdeologyA, observed_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"hasIdeologyA_seed.csv", ",");
 
@@ -260,7 +273,7 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir + "isProAuth.csv", ",")
  * Set up training databases for weight learning using training set
  */
 
-Database distributionDB = data.getDatabase(predict_tr, [hasLabelPro, sarcastic, nasty, attacks, agrees, participates, topic] as Set, observed_tr);
+Database distributionDB = data.getDatabase(predict_tr, [responds,hasLabelPro, sarcastic, nasty, attacks, agrees, participates, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProAuth] as Set)
 Database dummy_DB = data.getDatabase(dummy_tr, [hasIdeologyA, isProAuth] as Set)
 
@@ -280,7 +293,7 @@ weightLearning.close();
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [hasLabelPro, sarcastic, nasty, attacks, agrees, participates, topic] as Set, observed_te);
+Database testDB = data.getDatabase(predict_te, [responds, hasLabelPro, sarcastic, nasty, attacks, agrees, participates, topic] as Set, observed_te);
 Database testTruth_authPro = data.getDatabase(authProTruth, [isProAuth] as Set)
 
 Database dummy_test = data.getDatabase(dummy_te, [hasIdeologyA, isProAuth] as Set)

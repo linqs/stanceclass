@@ -67,10 +67,14 @@ def defaultPath = System.getProperty("java.io.tmpdir")
 String dbPath = cb.getString("dbPath", defaultPath + File.separator + dataSet)
 DataStore data = new RDBMSDataStore(new H2DatabaseDriver(Type.Disk, dbPath, true), cb)
 
+squared = true
 subDir = args[1]
 fold = args[2]
 def dir = 'data'+java.io.File.separator + subDir + java.io.File.separator + fold + java.io.File.separator + 'train' + java.io.File.separator;
 def testdir = 'data'+java.io.File.separator + subDir + java.io.File.separator + fold + java.io.File.separator + 'test' + java.io.File.separator;
+
+def toytrain = 'data'+java.io.File.separator + 'toy' + java.io.File.separator + fold + java.io.File.separator + 'train' + java.io.File.separator;
+def toytest = 'data'+java.io.File.separator + 'toy' + java.io.File.separator + fold + java.io.File.separator + 'test' + java.io.File.separator;
 
 initialWeight = 5
 
@@ -95,6 +99,8 @@ model.add predicate: "nasty" , types:[ArgumentType.UniqueID, ArgumentType.Unique
 model.add predicate: "attacks" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 model.add predicate: "agrees" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
 
+model.add predicate: "responds" , types:[ArgumentType.UniqueID, ArgumentType.UniqueID, ArgumentType.String]
+
 model.add predicate: "hasLabelPro" , types:[ArgumentType.UniqueID, ArgumentType.String]
 
 /*
@@ -115,26 +121,26 @@ model.add predicate: "isProAuth" , types:[ArgumentType.UniqueID, ArgumentType.St
 
 /* simple stance rules*/
 
-model.add rule : (agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> isProAuth(A1, T), weight : initialWeight
-model.add rule : (agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> ~(isProAuth(A1, T)), weight :initialWeight
+//model.add rule : (agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight, squared:squared
+//model.add rule : (agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight, squared:squared
 
 //model.add rule : (~agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~isProAuth(A2, T)) >> isProAuth(A1, T), weight : initialWeight
 //model.add rule : (~agrees(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & (isProAuth(A2, T))) >> ~(isProAuth(A1, T)), weight :initialWeight
 
-model.add rule : (sarcastic(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight
-model.add rule : (sarcastic(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight
+//model.add rule : (sarcastic(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight, squared:squared
+//model.add rule : (sarcastic(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight, squared:squared
 
 //model.add rule : (~sarcastic(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> isProAuth(A1, T), weight : initialWeight
 //model.add rule : (~sarcastic(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> ~(isProAuth(A1, T)), weight :initialWeight
 
-model.add rule : (nasty(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight
-model.add rule : (nasty(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight
+//model.add rule : (nasty(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight, squared:squared
+//model.add rule : (nasty(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight, squared:squared
 
 //model.add rule : (~nasty(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> isProAuth(A1, T), weight : initialWeight
 //model.add rule : (~nasty(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> ~(isProAuth(A1, T)), weight :initialWeight
 
-model.add rule : (attacks(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight
-model.add rule : (attacks(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight
+//model.add rule : (attacks(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & isProAuth(A2, T)) >> ~isProAuth(A1, T), weight : initialWeight, squared:squared
+//model.add rule : (attacks(A1, A2, T) & (A1-A2) & participates(A1, T) & participates(A2, T) & ~(isProAuth(A2, T))) >> (isProAuth(A1, T)), weight :initialWeight, squared:squared
 
 //model.add rule : (agrees(A1, A2, T) & agrees(A2, A1, T) & (A1-A2) & hasIdeologyA(A1)) >> hasIdeologyA(A2), weight : initialWeight
 //model.add rule : (agrees(A1, A2, T)  & agrees(A2, A1, T) & (A1-A2) & hasIdeologyA(A2)) >> hasIdeologyA(A1), weight :initialWeight
@@ -164,56 +170,124 @@ model.add rule : (attacks(A1, A2, T) & (A1-A2) & participates(A1, T) & participa
 //model.add rule : (attacks(A1, A2, T)  & attacks(A2, A1, T) & (A1-A2) & ~hasIdeologyA(A2)) >> hasIdeologyA(A1), weight :initialWeight
 
 
+
+
+//model.add rule : (responds(A1, A2, T) & (A1 - A2) & isProAuth(A2, T) & participates(A1, T)) >> ~isProAuth(A1, T), weight : initialWeight, squared:squared
+//model.add rule : (responds(A1, A2, T) & (A1 - A2) & ~isProAuth(A2, T) & participates(A2, T) & participates(A1, T)) >> isProAuth(A1, T), weight : initialWeight, squared:squared
+
+
+
 //model.add rule: (hasIdeologyA(A) & participates(A, T)) >> isProAuth(A, T), weight : initialWeight
 //model.add rule: (hasLabelPro(A, T)) >> hasIdeologyA(A) , weight : initialWeight
 //model.add rule: (~hasIdeologyA(A) & participates(A, T)) >> ~isProAuth(A, T), weight : initialWeight
 //model.add rule: (~hasLabelPro(A, T) & participates(A, T)) >> ~hasIdeologyA(A) , weight : initialWeight
 
 
-model.add rule: (hasIdeologyA(A) & participates(A, "abortion")) >> isProAuth(A,"abortion"), weight : initialWeight
-model.add rule: (hasIdeologyA(A) & participates(A, "evolution")) >> isProAuth(A, "evolution"), weight : initialWeight
-model.add rule: (hasIdeologyA(A) & participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage"), weight : initialWeight
-model.add rule: (hasIdeologyA(A) & participates(A, "guncontrol")) >> isProAuth(A, "guncontrol"), weight : initialWeight
+model.add rule: (hasIdeologyA(A) & participates(A, "abortion")) >> isProAuth(A,"abortion"), weight : initialWeight, squared:squared
+model.add rule: (hasIdeologyA(A) & participates(A, "evolution")) >> isProAuth(A, "evolution"), weight : initialWeight, squared:squared
+model.add rule: (hasIdeologyA(A) & participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage"), weight : initialWeight, squared:squared
+model.add rule: (hasIdeologyA(A) & participates(A, "guncontrol")) >> isProAuth(A, "guncontrol"), weight : initialWeight, squared:squared
 
-//model.add rule: (hasIdeologyA(A) & participates(A, "abortion")) >> ~isProAuth(A, "abortion"), weight : initialWeight
-//model.add rule: (hasIdeologyA(A) & participates(A, "evolution")) >> ~isProAuth(A, "evolution"), weight : initialWeight
-//model.add rule: (hasIdeologyA(A) & participates(A, "gaymarriage")) >> ~isProAuth(A, "gaymarriage"), weight : initialWeight
-//model.add rule: (hasIdeologyA(A) & participates(A, "guncontrol")) >> ~isProAuth(A, "guncontrol"), weight : initialWeight
+model.add rule: (hasIdeologyA(A) & participates(A, "abortion")) >> ~isProAuth(A, "abortion"), weight : initialWeight, squared:squared
+model.add rule: (hasIdeologyA(A) & participates(A, "evolution")) >> ~isProAuth(A, "evolution"), weight : initialWeight, squared:squared
+model.add rule: (hasIdeologyA(A) & participates(A, "gaymarriage")) >> ~isProAuth(A, "gaymarriage"), weight : initialWeight, squared:squared
+model.add rule: (hasIdeologyA(A) & participates(A, "guncontrol")) >> ~isProAuth(A, "guncontrol"), weight : initialWeight, squared:squared
 
-//model.add rule: (~hasIdeologyA(A) & participates(A, "abortion")) >> ~isProAuth(A, "abortion"), weight : initialWeight
-//model.add rule: (~hasIdeologyA(A) & participates(A, "evolution")) >> ~isProAuth(A, "evolution"), weight : initialWeight
-//model.add rule: (~hasIdeologyA(A) & participates(A, "gaymarriage")) >> ~isProAuth(A, "gaymarriage"), weight : initialWeight
-//model.add rule: (~hasIdeologyA(A) & participates(A, "guncontrol")) >> ~isProAuth(A, "guncontrol"), weight : initialWeight
+model.add rule: (~hasIdeologyA(A) & participates(A, "abortion")) >> ~isProAuth(A, "abortion"), weight : initialWeight, squared:squared
+model.add rule: (~hasIdeologyA(A) & participates(A, "evolution")) >> ~isProAuth(A, "evolution"), weight : initialWeight, squared:squared
+model.add rule: (~hasIdeologyA(A) & participates(A, "gaymarriage")) >> ~isProAuth(A, "gaymarriage"), weight : initialWeight, squared:squared
+model.add rule: (~hasIdeologyA(A) & participates(A, "guncontrol")) >> ~isProAuth(A, "guncontrol"), weight : initialWeight, squared:squared
 
-//model.add rule: (~hasIdeologyA(A) & participates(A, "abortion")) >> isProAuth(A, "abortion"), weight : initialWeight
-//model.add rule: (~hasIdeologyA(A) & participates(A, "evolution")) >> isProAuth(A, "evolution"), weight : initialWeight
-//model.add rule: (~hasIdeologyA(A) & participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage"), weight : initialWeight
-//model.add rule: (~hasIdeologyA(A) & participates(A, "guncontrol")) >> isProAuth(A, "guncontrol"), weight : initialWeight
+model.add rule: (~hasIdeologyA(A) & participates(A, "abortion")) >> isProAuth(A, "abortion"), weight : initialWeight, squared:squared
+model.add rule: (~hasIdeologyA(A) & participates(A, "evolution")) >> isProAuth(A, "evolution"), weight : initialWeight, squared:squared
+model.add rule: (~hasIdeologyA(A) & participates(A, "gaymarriage")) >> isProAuth(A, "gaymarriage"), weight : initialWeight, squared:squared
+model.add rule: (~hasIdeologyA(A) & participates(A, "guncontrol")) >> isProAuth(A, "guncontrol"), weight : initialWeight, squared:squared
 
-model.add rule: (isProAuth(A, "abortion")) >> hasIdeologyA(A) , weight : initialWeight
-model.add rule: (isProAuth(A, "evolution")) >> hasIdeologyA(A) , weight : initialWeight
-model.add rule: (isProAuth(A, "gaymarriage")) >> hasIdeologyA(A) , weight : initialWeight
-model.add rule: (isProAuth(A, "guncontrol")) >> hasIdeologyA(A) , weight : initialWeight
+model.add rule: (isProAuth(A, "abortion")) >> hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (isProAuth(A, "evolution")) >> hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (isProAuth(A, "gaymarriage")) >> hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (isProAuth(A, "guncontrol")) >> hasIdeologyA(A) , weight : initialWeight, squared:squared
 
-//model.add rule: (~isProAuth(A, "abortion") & participates(A, "abortion")) >> hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (~isProAuth(A, "evolution") & participates(A, "evolution")) >> hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (~isProAuth(A, "gaymarriage") & participates(A, "gaymarriage")) >> hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (~isProAuth(A, "guncontrol") & participates(A, "guncontrol")) >> hasIdeologyA(A) , weight : initialWeight
+model.add rule: (~isProAuth(A, "abortion") & participates(A, "abortion")) >> hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (~isProAuth(A, "evolution") & participates(A, "evolution")) >> hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (~isProAuth(A, "gaymarriage") & participates(A, "gaymarriage")) >> hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (~isProAuth(A, "guncontrol") & participates(A, "guncontrol")) >> hasIdeologyA(A) , weight : initialWeight, squared:squared
 
-//model.add rule: (isProAuth(A, "abortion")) >> ~hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (isProAuth(A, "evolution")) >> ~hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (isProAuth(A, "gaymarriage")) >> ~hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (isProAuth(A, "guncontrol")) >> ~hasIdeologyA(A) , weight : initialWeight
+model.add rule: (isProAuth(A, "abortion")) >> ~hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (isProAuth(A, "evolution")) >> ~hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (isProAuth(A, "gaymarriage")) >> ~hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (isProAuth(A, "guncontrol")) >> ~hasIdeologyA(A) , weight : initialWeight, squared:squared
 
-//model.add rule: (~isProAuth(A, "abortion") & participates(A, "abortion")) >> ~hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (~isProAuth(A, "evolution") & participates(A, "evolution")) >> ~hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (~isProAuth(A, "gaymarriage") & participates(A, "gaymarriage")) >> ~hasIdeologyA(A) , weight : initialWeight
-//model.add rule: (~isProAuth(A, "guncontrol") & participates(A, "guncontrol")) >> ~hasIdeologyA(A) , weight : initialWeight
+model.add rule: (~isProAuth(A, "abortion") & participates(A, "abortion")) >> ~hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (~isProAuth(A, "evolution") & participates(A, "evolution")) >> ~hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (~isProAuth(A, "gaymarriage") & participates(A, "gaymarriage")) >> ~hasIdeologyA(A) , weight : initialWeight, squared:squared
+model.add rule: (~isProAuth(A, "guncontrol") & participates(A, "guncontrol")) >> ~hasIdeologyA(A) , weight : initialWeight, squared:squared
+
+
+/*
+model.add rule : (isProAuth(A, "abortion") & isProAuth(A, "evolution")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & isProAuth(A, "gaymarriage")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & isProAuth(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "evolution") & isProAuth(A, "gaymarriage")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "evolution") & isProAuth(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "gaymarriage") & isProAuth(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+
+model.add rule : (isProAuth(A, "abortion") & isProAuth(A, "evolution")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & isProAuth(A, "gaymarriage")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & isProAuth(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "evolution") & isProAuth(A, "gaymarriage")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "evolution") & isProAuth(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "gaymarriage") & isProAuth(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+
+model.add rule : (~isProAuth(A, "abortion") & ~isProAuth(A, "evolution") &  participates(A, "abortion") & participates(A, "evolution")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "abortion") & ~isProAuth(A, "gaymarriage") & participates(A, "abortion") & participates(A, "gaymarriage")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "abortion") & ~isProAuth(A, "guncontrol") & participates(A, "abortion") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "evolution") & ~isProAuth(A, "gaymarriage") & participates(A, "evolution") & participates(A, "gaymarriage")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "evolution") & ~isProAuth(A, "guncontrol") & participates(A, "evolution") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "gaymarriage") & ~isProAuth(A, "guncontrol") & participates(A, "gaymarriage") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+
+model.add rule : (~isProAuth(A, "abortion") & ~isProAuth(A, "evolution") &  participates(A, "abortion") & participates(A, "evolution")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "abortion") & ~isProAuth(A, "gaymarriage") & participates(A, "abortion") & participates(A, "gaymarriage")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "abortion") & ~isProAuth(A, "guncontrol") & participates(A, "abortion") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "evolution") & ~isProAuth(A, "gaymarriage") & participates(A, "evolution") & participates(A, "gaymarriage")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "evolution") & ~isProAuth(A, "guncontrol") & participates(A, "evolution") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "gaymarriage") & ~isProAuth(A, "guncontrol") & participates(A, "gaymarriage") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+
+model.add rule : (isProAuth(A, "abortion") & ~isProAuth(A, "evolution") &  participates(A, "abortion") & participates(A, "evolution")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & ~isProAuth(A, "gaymarriage") & participates(A, "abortion") & participates(A, "gaymarriage")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & ~isProAuth(A, "guncontrol") & participates(A, "abortion") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "evolution") & ~isProAuth(A, "gaymarriage") & participates(A, "evolution") & participates(A, "gaymarriage")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "evolution") & ~isProAuth(A, "guncontrol") & participates(A, "evolution") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "gaymarriage") & ~isProAuth(A, "guncontrol") & participates(A, "gaymarriage") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+
+model.add rule : (isProAuth(A, "abortion") & ~isProAuth(A, "evolution") &  participates(A, "abortion") & participates(A, "evolution")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & ~isProAuth(A, "gaymarriage") & participates(A, "abortion") & participates(A, "gaymarriage")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "abortion") & ~isProAuth(A, "guncontrol") & participates(A, "abortion") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "evolution") & ~isProAuth(A, "gaymarriage") & participates(A, "evolution") & participates(A, "gaymarriage")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "evolution") & ~isProAuth(A, "guncontrol") & participates(A, "evolution") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (isProAuth(A, "gaymarriage") & ~isProAuth(A, "guncontrol") & participates(A, "gaymarriage") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+
+model.add rule : (~isProAuth(A, "abortion") & isProAuth(A, "evolution") &  participates(A, "abortion") & participates(A, "evolution")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "abortion") & isProAuth(A, "gaymarriage") & participates(A, "abortion") & participates(A, "gaymarriage")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "abortion") & isProAuth(A, "guncontrol") & participates(A, "abortion") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "evolution") & isProAuth(A, "gaymarriage") & participates(A, "evolution") & participates(A, "gaymarriage")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "evolution") & isProAuth(A, "guncontrol") & participates(A, "evolution") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "gaymarriage") & isProAuth(A, "guncontrol") & participates(A, "gaymarriage") & participates(A, "guncontrol")) >> hasIdeologyA(A), weight : initialWeight
+
+model.add rule : (~isProAuth(A, "abortion") & isProAuth(A, "evolution") &  participates(A, "abortion") & participates(A, "evolution")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "abortion") & isProAuth(A, "gaymarriage") & participates(A, "abortion") & participates(A, "gaymarriage")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "abortion") & isProAuth(A, "guncontrol") & participates(A, "abortion") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "evolution") & isProAuth(A, "gaymarriage") & participates(A, "evolution") & participates(A, "gaymarriage")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "evolution") & isProAuth(A, "guncontrol") & participates(A, "evolution") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+model.add rule : (~isProAuth(A, "gaymarriage") & isProAuth(A, "guncontrol") & participates(A, "gaymarriage") & participates(A, "guncontrol")) >> ~hasIdeologyA(A), weight : initialWeight
+
+*/
 
 //Prior that the label given by the text classifier is indeed the stance label
 
-model.add rule : (hasLabelPro(A, T)) >> isProAuth(A, T) , weight : initialWeight
-model.add rule : (~(hasLabelPro(A, T))) >> ~isProAuth(A, T) , weight : initialWeight
+//model.add rule : (hasLabelPro(A, T)) >> isProAuth(A, T) , weight : initialWeight, squared:squared
+//model.add rule : (~(hasLabelPro(A, T))) >> ~isProAuth(A, T) , weight : initialWeight, squared:squared
+
 /*
  * Inserting data into the data store
  */
@@ -241,8 +315,13 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"hasLabelPro.csv", ",");
 inserter = data.getInserter(topic, observed_tr)
 InserterUtils.loadDelimitedData(inserter, dir+"topic.csv", ",");
 
+/* uncomment to use real data not toy data*/
+//inserter = data.getInserter(participates, observed_tr)
+//InserterUtils.loadDelimitedData(inserter, dir+"participates.csv", ",")
+
+
 inserter = data.getInserter(participates, observed_tr)
-InserterUtils.loadDelimitedData(inserter, dir+"participates.csv", ",")
+InserterUtils.loadDelimitedData(inserter, toytrain+"participates.csv", ",")
 
 /*load sentiment predicates with soft truth values*/
 
@@ -258,16 +337,24 @@ InserterUtils.loadDelimitedDataTruth(inserter, dir+"nastiness_author.csv", ",");
 inserter = data.getInserter(attacks, observed_tr)
 InserterUtils.loadDelimitedDataTruth(inserter, dir+"attack_author.csv", ",");
 
-inserter = data.getInserter(hasIdeologyA, observed_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"hasIdeologyA_seed.csv", ",");
+inserter = data.getInserter(responds, observed_tr)
+InserterUtils.loadDelimitedData(inserter, dir + "responds.csv", ",");
+
+//inserter = data.getInserter(hasIdeologyA, observed_tr)
+//InserterUtils.loadDelimitedDataTruth(inserter, dir+"hasIdeologyA_seed.csv", ",");
 
 
 /*
  * Ground truth for training data for weight learning
  */
+/* uncomment to use real data not toy data*/
+//inserter = data.getInserter(isProAuth, truth_tr)
+//InserterUtils.loadDelimitedDataTruth(inserter, dir+"isProAuth.csv", ",");
+
 
 inserter = data.getInserter(isProAuth, truth_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir+"isProAuth.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, toytrain+"toy.csv", ",");
+
 
 /*
  * Used later on to populate training DB with all possible interactions
@@ -279,8 +366,13 @@ InserterUtils.loadDelimitedData(inserter, dir + "hasIdeologyA.csv", ",")
 
 /*db population for all possible stance atoms*/
 
+/* uncomment to use real data not toy data*/
+//inserter = data.getInserter(isProAuth, dummy_tr)
+//InserterUtils.loadDelimitedDataTruth(inserter, dir + "isProAuth.csv", ",")
+
+
 inserter = data.getInserter(isProAuth, dummy_tr)
-InserterUtils.loadDelimitedDataTruth(inserter, dir + "isProAuth.csv", ",")
+InserterUtils.loadDelimitedDataTruth(inserter, toytrain + "toy.csv", ",")
 
 /*
  * Testing split for model inference
@@ -293,8 +385,15 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir+"hasLabelPro.csv", ",");
 inserter = data.getInserter(topic, observed_te)
 InserterUtils.loadDelimitedData(inserter, testdir+"topic.csv",",");
 
+/* uncomment to use real data not toy data*/
+//inserter = data.getInserter(participates, observed_te)
+//InserterUtils.loadDelimitedData(inserter, testdir+"participates.csv",",");
+
+
 inserter = data.getInserter(participates, observed_te)
-InserterUtils.loadDelimitedData(inserter, testdir+"participates.csv",",");
+InserterUtils.loadDelimitedData(inserter, toytest+"participates.csv",",");
+
+
 
 inserter = data.getInserter(agrees, observed_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"agreement_author.csv",",");
@@ -308,15 +407,28 @@ InserterUtils.loadDelimitedDataTruth(inserter, testdir+"nastiness_author.csv", "
 inserter = data.getInserter(attacks, observed_te)
 InserterUtils.loadDelimitedDataTruth(inserter, testdir+"attack_author.csv", ",");
 
-inserter = data.getInserter(hasIdeologyA, observed_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"hasIdeologyA_seed.csv", ",");
+inserter = data.getInserter(responds, observed_te)
+InserterUtils.loadDelimitedData(inserter, testdir + "responds.csv", ",");
+
+
+//inserter = data.getInserter(hasIdeologyA, observed_te)
+//InserterUtils.loadDelimitedDataTruth(inserter, testdir+"hasIdeologyA_seed.csv", ",");
+
+/*for toy data experiments*/
+inserter = data.getInserter(isProAuth, observed_te)
+InserterUtils.loadDelimitedDataTruth(inserter, toytest + "toy_obs.csv", ",");
+
 
 /*
  * Random variable partitions
  */
+/* uncomment to use real data not toy data*/
+//inserter = data.getInserter(isProAuth, authProTruth)
+//InserterUtils.loadDelimitedDataTruth(inserter, testdir+"isProAuth.csv", ",");
+
 
 inserter = data.getInserter(isProAuth, authProTruth)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir+"isProAuth.csv", ",");
+InserterUtils.loadDelimitedDataTruth(inserter, toytest+"toy.csv", ",");
 
 /*supports and against*/
 
@@ -325,14 +437,18 @@ InserterUtils.loadDelimitedData(inserter, testdir + "hasIdeologyA.csv", ",")
 
 
 /*to populate testDB with the correct rvs */
+/* uncomment to use real data not toy data*/
+//inserter = data.getInserter(isProAuth, dummy_te)
+//InserterUtils.loadDelimitedDataTruth(inserter, testdir + "isProAuth.csv", ",")
+
 inserter = data.getInserter(isProAuth, dummy_te)
-InserterUtils.loadDelimitedDataTruth(inserter, testdir + "isProAuth.csv", ",")
+InserterUtils.loadDelimitedDataTruth(inserter, toytest + "toy.csv", ",")
 
 /*
  * Set up training databases for weight learning using training set
  */
 
-Database distributionDB = data.getDatabase(predict_tr, [hasLabelPro, sarcastic, nasty, attacks, agrees, participates, topic] as Set, observed_tr);
+Database distributionDB = data.getDatabase(predict_tr, [responds, hasLabelPro, sarcastic, nasty, attacks, agrees, participates, topic] as Set, observed_tr);
 Database truthDB = data.getDatabase(truth_tr, [isProAuth] as Set)
 Database dummy_DB = data.getDatabase(dummy_tr, [hasIdeologyA, isProAuth] as Set)
 
@@ -352,7 +468,7 @@ weightLearning.close();
 
 println model;
 
-Database testDB = data.getDatabase(predict_te, [hasLabelPro, sarcastic, nasty, attacks, agrees, participates, topic] as Set, observed_te);
+Database testDB = data.getDatabase(predict_te, [responds, hasLabelPro, sarcastic, nasty, attacks, agrees, participates, topic] as Set, observed_te);
 Database testTruth_authPro = data.getDatabase(authProTruth, [isProAuth] as Set)
 
 Database dummy_test = data.getDatabase(dummy_te, [hasIdeologyA, isProAuth] as Set)
